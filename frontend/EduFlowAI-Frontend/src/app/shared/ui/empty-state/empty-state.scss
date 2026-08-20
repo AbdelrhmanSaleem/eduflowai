@@ -1,0 +1,47 @@
+.state {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  border: 1px dashed #c4c6cf;
+  border-radius: 0.75rem;
+  background: #fff;
+  padding: 3rem 1.5rem;
+  text-align: center;
+}
+
+.state__icon {
+  display: grid;
+  width: 3.5rem;
+  height: 3.5rem;
+  place-items: center;
+  border-radius: 999px;
+  background: #d0e1fb;
+  color: #022448;
+  font-size: 1.75rem;
+}
+
+.state h2,
+.state p {
+  margin: 0;
+}
+
+.state h2 {
+  color: #022448;
+  font-size: 1.25rem;
+}
+
+.state p {
+  max-width: 36rem;
+  color: #505f76;
+}
+
+.state button {
+  border: 0;
+  border-radius: 0.25rem;
+  background: #022448;
+  padding: 0.7rem 1rem;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}

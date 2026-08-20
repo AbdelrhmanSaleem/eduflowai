@@ -1,0 +1,13 @@
+<section class="error-state" role="alert">
+  <span class="material-symbols-outlined" aria-hidden="true">error</span>
+  <h2>{{ title() }}</h2>
+  @if (description()) {
+    <p>{{ description() }}</p>
+  }
+  @if (traceId()) {
+    <small>Reference: {{ traceId() }}</small>
+  }
+  @if (actionLabel()) {
+    <button type="button" (click)="action.emit()">{{ actionLabel() }}</button>
+  }
+</section>

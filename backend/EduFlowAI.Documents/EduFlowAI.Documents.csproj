@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Infrastructure\Fake\**" />
+    <EmbeddedResource Remove="Infrastructure\Fake\**" />
+    <None Remove="Infrastructure\Fake\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EduFlowAI.Admission\EduFlowAI.Admission.csproj" />
+    <ProjectReference Include="..\EduFlowAI.Communication\EduFlowAI.Communication.csproj" />
+    <ProjectReference Include="..\EduFlowAI.Shared.Kernel\EduFlowAI.Shared.Kernel.csproj" />
+    <ProjectReference Include="..\EduFlowAI.Shared.Messaging.Contracts\EduFlowAI.Shared.Messaging.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" Version="4.0.100.8" />
+    <PackageReference Include="AWSSDK.S3" Version="4.0.102.1" />
+    <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="5.0.17" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.10" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.10" />
+    <PackageReference Include="WolverineFx" Version="6.20.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Infrastructure\ExternalServices\" />
+    <Folder Include="Presentation\Responses\" />
+  </ItemGroup>
+
+</Project>

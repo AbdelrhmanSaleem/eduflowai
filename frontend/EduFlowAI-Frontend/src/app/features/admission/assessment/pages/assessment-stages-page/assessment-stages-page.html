@@ -1,0 +1,60 @@
+<div class="flex-1 p-4 md:p-margin-page max-w-container-max mx-auto w-full">
+    <!-- Breadcrumbs & Header -->
+    <div class="mb-8">
+        <nav aria-label="Breadcrumb" class="flex text-on-surface-variant font-label-sm text-label-sm mb-4 uppercase tracking-wider">
+            <ol class="flex items-center space-x-2 rtl:space-x-reverse">
+                <li>
+                    <a class="hover:text-primary transition-colors" href="#">Portal</a>
+                </li>
+                <li>
+                    <span class="material-symbols-outlined text-[16px]" data-icon="chevron_right">chevron_right</span>
+                </li>
+                <li>
+                    <a class="hover:text-primary transition-colors" href="#">My Applications</a>
+                </li>
+                <li>
+                    <span class="material-symbols-outlined text-[16px]" data-icon="chevron_right">chevron_right</span>
+                </li>
+                <li aria-current="page" class="text-primary font-semibold">
+                    Assessment Progress
+                </li>
+            </ol>
+        </nav>
+        
+        <h2 class="font-headline-xl text-headline-xl text-on-surface">Assessment Progress</h2>
+        <p class="font-body-md text-body-md text-on-surface-variant mt-2 max-w-2xl">
+            Track the status of your downstream assessment exams. This page is read-only and will update automatically as results are processed.
+        </p>
+    </div>
+    
+    <!-- Content Area: Timeline Container -->
+    <div class="bg-surface border border-outline-variant rounded-lg p-6 md:p-8 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.04),0_2px_4px_-1px_rgba(0,0,0,0.02)]">
+        
+        <!-- Loading State -->
+        @if (store.isLoading()) {
+            <div class="flex justify-center items-center py-12">
+                <span class="material-symbols-outlined animate-spin text-4xl text-primary">progress_activity</span>
+                <span class="ml-3 font-body-md text-on-surface-variant">Loading assessment results...</span>
+            </div>
+        } 
+        
+        <!-- Error State -->
+        @else if (store.error()) {
+            <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+                <span class="block sm:inline">{{ store.error() }}</span>
+            </div>
+        } 
+        
+        <!-- Success State: Render the dumb component and pass the signals -->
+        @else {
+            <div class="pl-2 md:pl-4 rtl:pl-0 rtl:pr-2 rtl:md:pr-4">
+                <app-stage-stepper
+                    [englishStatus]="store.englishStatus()"
+                    [iqStatus]="store.iqStatus()"
+                    [technicalStatus]="store.technicalStatus()"
+                    [interviewStatus]="store.interviewStatus()">
+                </app-stage-stepper>
+            </div>
+        }
+    </div>
+</div>

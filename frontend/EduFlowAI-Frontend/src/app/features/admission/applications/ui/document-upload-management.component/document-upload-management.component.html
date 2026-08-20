@@ -1,0 +1,45 @@
+<div class="bg-surface border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+    
+    <!-- Header -->
+    <div class="bg-error-container/30 border-b border-error/20 px-6 py-5 flex items-start gap-4">
+        <div class="w-12 h-12 rounded-full bg-error-container flex items-center justify-center shrink-0">
+            <!-- Changed icon to block to indicate finality -->
+            <span class="material-symbols-outlined text-error text-2xl" style="font-variation-settings: 'FILL' 1;">block</span>
+        </div>
+        <div>
+            <!-- Changed title from "Action Required" to "Verification Failed" -->
+            <h3 class="font-headline-md text-error font-bold">Document Verification Failed</h3>
+            <p class="font-body-sm text-on-surface-variant mt-1 max-w-2xl">
+                Our team has reviewed your uploaded documents. Unfortunately, your application has been closed because the submitted documents do not meet the admission requirements.
+            </p>
+        </div>
+    </div>
+
+    <!-- Static Rejection Message -->
+    <div class="p-6">
+        <div class="border border-error/30 rounded-lg p-5 relative overflow-hidden bg-surface-container-lowest shadow-sm">
+            <!-- Left red accent line -->
+            <div class="absolute left-0 top-0 bottom-0 w-1 bg-error rtl:left-auto rtl:right-0"></div>
+            
+            <div class="flex flex-col gap-4">
+                <div class="flex items-center gap-2 mb-1">
+                    <!-- Changed from Documents Rejected to Application Closed -->
+                    <h4 class="font-title-md text-on-surface font-bold">Application Closed</h4>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-error-container text-error uppercase tracking-wider">
+                        Rejected
+                    </span>
+                </div>
+                
+                <!-- Generalized Rejection Reason -->
+                <div class="bg-surface-container-low rounded p-4 border border-outline-variant/50">
+                    <p class="font-body-sm text-on-surface-variant leading-relaxed flex items-start gap-2">
+                        <span class="material-symbols-outlined text-[18px] text-error mt-0.5 shrink-0">info</span>
+                        <span>
+                            <strong>Reason for rejection:</strong> Your submitted documents do not fully align with the scholarship requirements or the information provided in your initial profile. As a result, this application cannot proceed further in the admission process.
+                        </span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

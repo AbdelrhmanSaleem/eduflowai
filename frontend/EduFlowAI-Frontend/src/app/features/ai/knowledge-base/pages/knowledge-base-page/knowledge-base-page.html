@@ -1,0 +1,514 @@
+<section
+  class="management-page"
+  [attr.dir]="locale.isRtl() ? 'rtl' : 'ltr'"
+>
+  <header class="management-header">
+    <div>
+      <h1>{{ locale.t('knowledgeBase.title') }}</h1>
+
+      <p>{{ locale.t('knowledgeBase.subtitle') }}</p>
+    </div>
+
+    <button
+      class="secondary-button"
+      type="button"
+      (click)="syncAll()"
+      [disabled]="isSyncing()"
+    >
+      <span class="material-symbols-outlined" aria-hidden="true">
+        sync
+      </span>
+
+      {{
+        isSyncing()
+          ? locale.t('knowledgeBase.syncing')
+          : locale.t('knowledgeBase.syncAll')
+      }}
+    </button>
+  </header>
+
+  @if (isLoading()) {
+    <div
+      class="loading-line"
+      role="status"
+      [attr.aria-label]="locale.t('common.loading')"
+    ></div>
+  }
+
+  @if (errorMessage()) {
+    <div class="message message--error" role="alert">
+      <span class="material-symbols-outlined" aria-hidden="true">
+        error
+      </span>
+
+      {{ errorMessage() }}
+    </div>
+  }
+
+  @if (syncError()) {
+    <div class="message message--error" role="alert">
+      <span class="material-symbols-outlined" aria-hidden="true">
+        error
+      </span>
+
+      {{ syncError() }}
+    </div>
+  }
+
+  @if (syncResult()) {
+    <div class="message message--success" role="status">
+      <span class="material-symbols-outlined" aria-hidden="true">
+        check_circle
+      </span>
+
+      {{ syncResultMessage() }}
+    </div>
+  }
+
+  <div class="management-grid management-grid--equal">
+    <section class="panel">
+      <div class="panel-heading">
+        <div>
+          <h2>{{ locale.t('knowledgeBase.upload.title') }}</h2>
+
+          <p>
+            {{ locale.t('knowledgeBase.upload.description') }}
+          </p>
+        </div>
+
+        <span
+          class="material-symbols-outlined panel-icon"
+          aria-hidden="true"
+        >
+          upload_file
+        </span>
+      </div>
+
+      <div class="field">
+        <label for="knowledge-file">
+          {{ locale.t('knowledgeBase.upload.document') }}
+        </label>
+
+        <input
+          id="knowledge-file"
+          type="file"
+          accept=".pdf,.md,.txt"
+          (change)="onFileSelected($event)"
+        />
+      </div>
+
+      @if (selectedFile) {
+        <div class="selected-file">
+          <span
+            class="material-symbols-outlined"
+            aria-hidden="true"
+          >
+            description
+          </span>
+
+          <span>{{ selectedFile.name }}</span>
+        </div>
+      }
+
+      @if (uploadError()) {
+        <div class="message message--error" role="alert">
+          <span
+            class="material-symbols-outlined"
+            aria-hidden="true"
+          >
+            error
+          </span>
+
+          {{ uploadError() }}
+        </div>
+      }
+
+      <div class="form-actions">
+        <button
+          class="primary-button"
+          type="button"
+          (click)="uploadSelectedFile()"
+          [disabled]="!selectedFile || isUploading()"
+        >
+          <span
+            class="material-symbols-outlined"
+            aria-hidden="true"
+          >
+            upload
+          </span>
+
+          {{
+            isUploading()
+              ? locale.t('knowledgeBase.upload.uploading')
+              : locale.t('knowledgeBase.upload.action')
+          }}
+        </button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading">
+        <div>
+          <h2>{{ locale.t('knowledgeBase.text.title') }}</h2>
+
+          <p>
+            {{ locale.t('knowledgeBase.text.description') }}
+          </p>
+        </div>
+
+        <span
+          class="material-symbols-outlined panel-icon"
+          aria-hidden="true"
+        >
+          edit_note
+        </span>
+      </div>
+
+      <div class="form-grid">
+        <div class="field span-2">
+          <label for="knowledge-title">
+            {{ locale.t('knowledgeBase.text.fieldTitle') }}
+          </label>
+
+          <input
+            id="knowledge-title"
+            type="text"
+            [value]="textTitle"
+            (input)="onTitleInput($event)"
+            [placeholder]="locale.t('knowledgeBase.text.optionalTitle')"
+          />
+        </div>
+
+        <div class="field span-2">
+          <label for="knowledge-content">
+            {{ locale.t('knowledgeBase.text.content') }}
+          </label>
+
+          <textarea
+            id="knowledge-content"
+            rows="6"
+            [value]="textContent"
+            (input)="onContentInput($event)"
+            [placeholder]="
+              locale.t('knowledgeBase.text.contentPlaceholder')
+            "
+          ></textarea>
+        </div>
+      </div>
+
+      @if (textError()) {
+        <div class="message message--error" role="alert">
+          <span
+            class="material-symbols-outlined"
+            aria-hidden="true"
+          >
+            error
+          </span>
+
+          {{ textError() }}
+        </div>
+      }
+
+      <div class="form-actions">
+        <button
+          class="primary-button"
+          type="button"
+          (click)="addTextContent()"
+          [disabled]="textContent.trim().length === 0 || isAddingText()"
+        >
+          <span
+            class="material-symbols-outlined"
+            aria-hidden="true"
+          >
+            add
+          </span>
+
+          {{
+            isAddingText()
+              ? locale.t('knowledgeBase.text.adding')
+              : locale.t('knowledgeBase.text.add')
+          }}
+        </button>
+      </div>
+    </section>
+
+    <section class="panel panel--full">
+      <div class="panel-heading">
+        <div>
+          <h2>{{ locale.t('knowledgeBase.sources.title') }}</h2>
+
+          <p>
+            {{ locale.t('knowledgeBase.sources.description') }}
+          </p>
+        </div>
+
+        <span class="count-badge">
+          {{ filteredDocuments().length }}
+        </span>
+      </div>
+
+      <div class="kb-toolbar">
+        <div class="field kb-search">
+          <label for="document-search">
+            {{ locale.t('knowledgeBase.sources.search') }}
+          </label>
+
+          <input
+            id="document-search"
+            type="search"
+            [placeholder]="
+              locale.t('knowledgeBase.sources.searchPlaceholder')
+            "
+            [value]="searchTerm()"
+            (input)="onSearchInput($event)"
+          />
+        </div>
+
+        <div class="field">
+          <label for="status-filter">
+            {{ locale.t('knowledgeBase.sources.status') }}
+          </label>
+
+          <select
+            id="status-filter"
+            [value]="statusFilter()"
+            (change)="onStatusFilterChange($event)"
+          >
+            <option value="all">
+              {{ locale.t('knowledgeBase.status.all') }}
+            </option>
+
+            <option value="pending">
+              {{ locale.t('knowledgeBase.status.pending') }}
+            </option>
+
+            <option value="indexing">
+              {{ locale.t('knowledgeBase.status.indexing') }}
+            </option>
+
+            <option value="indexed">
+              {{ locale.t('knowledgeBase.status.indexed') }}
+            </option>
+
+            <option value="failed">
+              {{ locale.t('knowledgeBase.status.failed') }}
+            </option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="page-size">
+            {{ locale.t('knowledgeBase.sources.rows') }}
+          </label>
+
+          <select
+            id="page-size"
+            [value]="pageSize()"
+            (change)="onPageSizeChange($event)"
+          >
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+          </select>
+        </div>
+
+        <div class="kb-refresh">
+          <button
+            class="secondary-button"
+            type="button"
+            (click)="loadDocuments()"
+            [disabled]="isLoading()"
+          >
+            <span
+              class="material-symbols-outlined"
+              aria-hidden="true"
+            >
+              refresh
+            </span>
+
+            {{
+              isLoading()
+                ? locale.t('knowledgeBase.sources.refreshing')
+                : locale.t('knowledgeBase.sources.refresh')
+            }}
+          </button>
+        </div>
+      </div>
+
+      @if (deleteError()) {
+        <div class="message message--error" role="alert">
+          <span
+            class="material-symbols-outlined"
+            aria-hidden="true"
+          >
+            error
+          </span>
+
+          {{ deleteError() }}
+        </div>
+      }
+
+      @if (
+        !isLoading() &&
+        !errorMessage() &&
+        filteredDocuments().length === 0
+      ) {
+        <div class="empty-state">
+          <span
+            class="material-symbols-outlined"
+            aria-hidden="true"
+          >
+            folder_off
+          </span>
+
+          <p>
+            {{ locale.t('knowledgeBase.sources.empty') }}
+          </p>
+        </div>
+      }
+
+      @if (
+        !isLoading() &&
+        !errorMessage() &&
+        filteredDocuments().length > 0
+      ) {
+        <div class="kb-table-wrapper">
+          <table class="kb-table">
+            <thead>
+              <tr>
+                <th>
+                  {{ locale.t('knowledgeBase.table.document') }}
+                </th>
+
+                <th>
+                  {{ locale.t('knowledgeBase.table.status') }}
+                </th>
+
+                <th>
+                  {{ locale.t('knowledgeBase.table.added') }}
+                </th>
+
+                <th class="actions-column">
+                  {{ locale.t('knowledgeBase.table.actions') }}
+                </th>
+              </tr>
+            </thead>
+
+            <tbody>
+              @for (
+                document of pagedDocuments();
+                track document.documentId
+              ) {
+                <tr>
+                  <td>
+                    <div class="document-cell">
+                      <span
+                        class="material-symbols-outlined"
+                        aria-hidden="true"
+                      >
+                        description
+                      </span>
+
+                      <div>
+                        <strong>
+                          {{ document.fileName }}
+                        </strong>
+
+                        @if (document.errorMessage) {
+                          <small class="document-error">
+                            {{ document.errorMessage }}
+                          </small>
+                        }
+                      </div>
+                    </div>
+                  </td>
+
+                  <td>
+                    <span
+                      class="kb-status"
+                      [attr.data-status]="
+                        document.status.toLowerCase()
+                      "
+                    >
+                      {{ statusLabel(document.status) }}
+                    </span>
+                  </td>
+
+                  <td class="created-cell">
+                    {{ document.createdAt }}
+                  </td>
+
+                  <td>
+                    <button
+                      class="danger-button"
+                      type="button"
+                      (click)="deleteDocument(document.documentId)"
+                      [disabled]="deletingDocumentId() !== null"
+                    >
+                      <span
+                        class="material-symbols-outlined"
+                        aria-hidden="true"
+                      >
+                        delete
+                      </span>
+
+                      {{
+                        deletingDocumentId() === document.documentId
+                          ? locale.t('knowledgeBase.deleting')
+                          : locale.t('knowledgeBase.delete')
+                      }}
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <footer class="kb-pagination">
+          <span>
+            {{ paginationSummary() }}
+          </span>
+
+          <div class="kb-pagination__controls">
+            <button
+              class="secondary-button"
+              type="button"
+              (click)="previousPage()"
+              [disabled]="currentPage() === 1"
+            >
+              <span
+                class="material-symbols-outlined"
+                aria-hidden="true"
+              >
+                chevron_left
+              </span>
+
+              {{ locale.t('knowledgeBase.pagination.previous') }}
+            </button>
+
+            <span class="page-indicator">
+              {{ pageSummary() }}
+            </span>
+
+            <button
+              class="secondary-button"
+              type="button"
+              (click)="nextPage()"
+              [disabled]="currentPage() === totalPages()"
+            >
+              {{ locale.t('knowledgeBase.pagination.next') }}
+
+              <span
+                class="material-symbols-outlined"
+                aria-hidden="true"
+              >
+                chevron_right
+              </span>
+            </button>
+          </div>
+        </footer>
+      }
+    </section>
+  </div>
+</section>

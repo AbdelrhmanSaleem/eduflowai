@@ -1,0 +1,97 @@
+@if (details(); as result) {
+    <div class="flex-grow flex flex-col w-full">
+      
+      <!-- Page Title & Breadcrumbs Placeholder (Optional, if you want it exactly like the design) -->
+      <div class="mb-10">
+        <h2 class="font-headline-xl text-headline-xl text-primary font-bold">Eligibility Result</h2>
+      </div>
+  
+      <!-- Main Content Canvas (Centered Card) -->
+      <div class="flex-grow flex items-center justify-center">
+        
+        <!-- ========================================== -->
+        <!-- SUCCESS STATE -->
+        <!-- ========================================== -->
+        @if (result.passed) {
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl w-full max-w-xl p-8 md:p-12 text-center shadow-[0_4px_6px_-1px_rgba(0,0,0,0.04),_0_2px_4px_-1px_rgba(0,0,0,0.02)] transition-all duration-300">
+            
+            <!-- Contextual Status Tag -->
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 mb-8 rounded-full border border-green-300 bg-transparent text-green-700 font-label-sm text-label-sm uppercase tracking-wider">
+              <span class="material-symbols-outlined text-[14px]">verified</span>
+              Eligibility Passed
+            </div>
+  
+            <!-- Success Badge Header -->
+            <div class="flex flex-col items-center gap-6 mb-6">
+              <div class="w-20 h-20 rounded-full bg-surface-container border-2 border-green-500/30 flex items-center justify-center shrink-0 animate-[pulse_2s_ease-in-out_infinite]">
+                <div class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+                  <span class="material-symbols-outlined text-[40px] text-green-700" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                </div>
+              </div>
+              <h3 class="font-headline-lg text-headline-lg text-primary max-w-md">
+                Congratulations, you have met all eligibility requirements.
+              </h3>
+            </div>
+  
+            <!-- Body Text -->
+            <p class="font-body-lg text-body-lg text-on-surface-variant max-w-md mx-auto mb-8 leading-relaxed">
+              Your application has been verified against the current cycle's criteria. You will automatically proceed to the next stage of the assessment process.
+            </p>
+  
+            <!-- Content Projection slot for Success Action Button -->
+            <div class="mt-8 flex justify-center">
+              <ng-content select="[success-action]"></ng-content>
+            </div>
+          </div>
+        }
+  
+        <!-- ========================================== -->
+        <!-- FAILED STATE -->
+        <!-- ========================================== -->
+        @if (!result.passed) {
+          <div class="w-full max-w-2xl bg-surface-container-lowest border border-outline-variant rounded-xl shadow-[0_4px_6px_-1px_rgba(0,0,0,0.04),_0_2px_4px_-1px_rgba(0,0,0,0.02)] p-8 md:p-12 flex flex-col items-center text-center">
+            
+            <!-- Status Tag -->
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-error text-error font-label-sm text-label-sm mb-6 bg-transparent">
+              <span class="material-symbols-outlined text-[14px]">cancel</span>
+              Eligibility Failed
+            </div>
+  
+            <!-- Icon graphic -->
+            <div class="w-16 h-16 rounded-full bg-surface-container-low flex items-center justify-center mb-6 border border-outline-variant">
+              <span class="material-symbols-outlined text-[32px] text-secondary" style="font-variation-settings: 'FILL' 0;">assignment_late</span>
+            </div>
+  
+            <!-- Heading -->
+            <h2 class="font-headline-lg text-headline-lg text-on-surface font-semibold mb-4">Application Unsuccessful</h2>
+            
+            <!-- Body Subheading -->
+            <p class="font-body-lg text-body-lg text-on-surface-variant mb-6 max-w-lg">
+              Based on the automated assessment, your application does not meet the following mandatory criteria for this program:
+            </p>
+  
+            <!-- Dynamic Bulleted List of Reasons -->
+            <div class="w-full max-w-md text-left bg-surface rounded-lg border border-outline-variant p-6 mb-10">
+              <ul class="flex flex-col gap-4">
+                @for (reason of result.failureReasons; track reason) {
+                  <li class="flex items-start gap-3">
+                    <span class="material-symbols-outlined text-error mt-0.5 text-[20px]">error</span>
+                    <span class="font-body-md text-body-md text-on-surface">{{ reason }}</span>
+                  </li>
+                }
+              </ul>
+            </div>
+  
+            <!-- Content Projection slot for Failed Action Button -->
+            <ng-content select="[failed-action]"></ng-content>
+          </div>
+        }
+  
+      </div>
+    </div>
+  } @else {
+    <!-- Loading state if details are null -->
+    <div class="flex justify-center p-8">
+      <span class="material-symbols-outlined animate-spin text-primary text-3xl">autorenew</span>
+    </div>
+}

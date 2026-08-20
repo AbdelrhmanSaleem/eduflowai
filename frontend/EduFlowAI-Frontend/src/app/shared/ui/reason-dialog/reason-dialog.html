@@ -1,0 +1,103 @@
+<div class="dialog-backdrop" (click)="cancel()">
+  <section
+    class="reason-dialog"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="reason-dialog-title"
+    cdkTrapFocus
+    cdkTrapFocusAutoCapture
+    (click)="stopPropagation($event)"
+    (keydown.escape)="cancel()"
+  >
+    <header class="dialog-header">
+      <span class="dialog-icon" [class.dialog-icon--danger]="config().variant === 'danger'">
+        <span class="material-symbols-outlined" aria-hidden="true">
+          {{ config().variant === 'danger' ? 'error' : 'published_with_changes' }}
+        </span>
+      </span>
+      <h2 id="reason-dialog-title">{{ config().title }}</h2>
+      <button
+        class="icon-button"
+        type="button"
+        [attr.aria-label]="config().cancelLabel"
+        [disabled]="submitting()"
+        (click)="cancel()"
+      >
+        <span class="material-symbols-outlined" aria-hidden="true">close</span>
+      </button>
+    </header>
+
+    <form (submit)="submit($event)">
+      <p class="dialog-explanation">
+        <span class="material-symbols-outlined" aria-hidden="true">info</span>
+        <span>{{ config().explanation }}</span>
+      </p>
+
+      @if (errorMessage()) {
+        <p class="submission-error" role="alert">{{ errorMessage() }}</p>
+      }
+
+      <label class="reason-field">
+        <span class="reason-field__label">
+          <strong>{{ config().label }}</strong>
+          <small>{{ config().requiredLabel }}</small>
+        </span>
+        <textarea
+          rows="6"
+          maxlength="1000"
+          [formControl]="reason"
+          [placeholder]="config().placeholder"
+          cdkFocusInitial
+        ></textarea>
+      </label>
+
+      <div class="field-meta">
+        <span>{{ config().helper }}</span>
+        <span>{{ reason.value.length }}/1000</span>
+      </div>
+
+      @if (reason.touched && reason.hasError('required')) {
+        <p class="field-error" role="alert">{{ config().requiredError }}</p>
+      } @else if (
+        reason.touched && (reason.hasError('minlength') || reason.hasError('maxlength'))
+      ) {
+        <p class="field-error" role="alert">{{ config().lengthError }}</p>
+      }
+
+      <div class="quick-reasons">
+        <strong>{{ config().quickInsertLabel }}</strong>
+        <div>
+          @for (quickReason of config().quickReasons; track quickReason) {
+            <button
+              type="button"
+              [disabled]="submitting()"
+              (click)="insertQuickReason(quickReason)"
+            >
+              {{ quickReason }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <footer class="dialog-actions">
+        <button
+          class="button button--secondary"
+          type="button"
+          [disabled]="submitting()"
+          (click)="cancel()"
+        >
+          {{ config().cancelLabel }}
+        </button>
+        <button
+          class="button"
+          [class.button--danger]="config().variant === 'danger'"
+          [class.button--primary]="config().variant === 'primary'"
+          type="submit"
+          [disabled]="submitting()"
+        >
+          {{ submitting() ? config().submittingLabel : config().confirmLabel }}
+        </button>
+      </footer>
+    </form>
+  </section>
+</div>

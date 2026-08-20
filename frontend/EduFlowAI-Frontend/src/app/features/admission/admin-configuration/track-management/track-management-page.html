@@ -1,0 +1,497 @@
+<section class="management-page" [attr.dir]="copy.isRtl() ? 'rtl' : 'ltr'">
+  <!-- Page Header -->
+  <header class="management-header">
+    <div>
+      <h1>{{ copy.text('Tracks', 'المسارات') }}</h1>
+      <p>
+        {{
+          copy.text(
+            'Manage the reusable track catalog. Cycle offerings decide which active tracks are visible to applicants.',
+            'أدر كتالوج المسارات. عروض الدورة تحدد المسارات النشطة الظاهرة للمتقدمين.'
+          )
+        }}
+      </p>
+    </div>
+    <div class="flex items-center gap-3">
+      <button
+        type="button"
+        (click)="loadData()"
+        [disabled]="loading()"
+        class="inline-flex items-center gap-1.5 rounded-card border border-outline-variant bg-white px-3.5 py-2 text-label-md text-secondary shadow-sm transition-colors hover:bg-surface-container-low disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        <span class="material-symbols-outlined text-base" aria-hidden="true">refresh</span>
+        {{ copy.text('Refresh', 'تحديث') }}
+      </button>
+      <button
+        type="button"
+        (click)="openDrawer()"
+        [disabled]="editablePrograms().length === 0"
+        class="inline-flex items-center gap-1.5 rounded-card bg-primary px-4 py-2 text-label-md text-on-primary shadow-sm transition-colors hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        <span class="material-symbols-outlined text-base" aria-hidden="true">add</span>
+        {{ copy.text('Add Track', 'إضافة مسار') }}
+      </button>
+    </div>
+  </header>
+
+  <!-- Success Message -->
+  @if (success()) {
+    <div
+      class="mb-4 flex items-center gap-2 rounded-card border border-success-container bg-success-container/40 px-4 py-3 text-body-sm text-success"
+      role="status"
+    >
+      <span class="material-symbols-outlined text-lg" aria-hidden="true">check_circle</span>
+      {{ success() }}
+    </div>
+  }
+
+  <!-- Error Message -->
+  @if (error()) {
+    <div
+      class="mb-4 flex items-center gap-2 rounded-card border border-error-container bg-error-container/40 px-4 py-3 text-body-sm text-error"
+      role="alert"
+    >
+      <span class="material-symbols-outlined text-lg" aria-hidden="true">error</span>
+      {{ error() }}
+    </div>
+  }
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="overflow-hidden rounded-panel border border-outline-variant bg-white shadow-card">
+      <div class="h-1 w-full overflow-hidden bg-surface-container">
+        <div class="h-full w-1/3 animate-pulse rounded-full bg-primary/40"></div>
+      </div>
+      <div class="flex items-center justify-center py-20">
+        <div class="flex flex-col items-center gap-3 text-on-surface-variant">
+          <span class="material-symbols-outlined animate-spin text-3xl" aria-hidden="true"
+            >progress_activity</span
+          >
+          <span class="text-body-sm">{{
+            copy.text('Loading tracks…', 'جارٍ تحميل المسارات…')
+          }}</span>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <!-- Data Table Card -->
+    <div class="overflow-hidden rounded-panel border border-outline-variant bg-white shadow-card">
+      <!-- Table Toolbar -->
+      <div
+        class="flex flex-col gap-3 border-b border-outline-variant px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div class="flex items-center gap-2">
+          <h2 class="text-label-md text-on-surface">
+            {{ copy.text('All Tracks', 'جميع المسارات') }}
+          </h2>
+          <span
+            class="inline-flex items-center rounded-full bg-secondary-container/50 px-2.5 py-0.5 text-label-sm text-on-secondary-container"
+          >
+            {{ filteredTracks().length }}
+          </span>
+        </div>
+        <div class="relative w-full max-w-xs">
+          <span
+            class="material-symbols-outlined pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-lg text-outline"
+            aria-hidden="true"
+            >search</span
+          >
+          <input
+            type="text"
+            [placeholder]="
+              copy.text(
+                'Search by name, category, location, program, or topic…',
+                'ابحث بالاسم أو الفئة أو الموقع أو البرنامج أو الموضوع…'
+              )
+            "
+            [value]="searchQuery()"
+            (input)="onSearch($event)"
+            class="w-full rounded-card border border-outline-variant bg-surface py-2 pe-3 ps-9 text-body-sm text-on-surface placeholder:text-outline outline-none transition-shadow focus:border-primary focus:ring-2 focus:ring-primary/15"
+          />
+        </div>
+      </div>
+
+      <!-- Table -->
+      @if (filteredTracks().length > 0) {
+        <div class="overflow-x-auto">
+          <table class="w-full text-start">
+            <thead>
+              <tr class="border-b border-outline-variant bg-surface-container-low/50">
+                <th
+                  class="px-5 py-3 text-start text-label-sm uppercase tracking-wider text-on-surface-variant"
+                >
+                  {{ copy.text('Name', 'الاسم') }}
+                </th>
+                <th
+                  class="px-5 py-3 text-start text-label-sm uppercase tracking-wider text-on-surface-variant"
+                >
+                  {{ copy.text('Program', 'البرنامج') }}
+                </th>
+                <th
+                  class="px-5 py-3 text-start text-label-sm uppercase tracking-wider text-on-surface-variant"
+                >
+                  {{ copy.text('Official metadata', 'البيانات الرسمية') }}
+                </th>
+                <th
+                  class="px-5 py-3 text-start text-label-sm uppercase tracking-wider text-on-surface-variant"
+                >
+                  {{ copy.text('Locations', 'المواقع') }}
+                </th>
+                <th
+                  class="px-5 py-3 text-start text-label-sm uppercase tracking-wider text-on-surface-variant"
+                >
+                  {{ copy.text('Topics', 'الموضوعات') }}
+                </th>
+                <th
+                  class="px-5 py-3 text-start text-label-sm uppercase tracking-wider text-on-surface-variant"
+                >
+                  {{ copy.text('Status', 'الحالة') }}
+                </th>
+                <th
+                  class="px-5 py-3 text-end text-label-sm uppercase tracking-wider text-on-surface-variant"
+                >
+                  {{ copy.text('Actions', 'إجراءات') }}
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant/50">
+              @for (track of filteredTracks(); track track.id) {
+                <tr class="transition-colors hover:bg-surface-container-low/30">
+                  <td class="px-5 py-3.5">
+                    <div>
+                      <span class="text-body-sm font-semibold text-on-surface">{{
+                        track.name
+                      }}</span>
+                      @if (track.description) {
+                        <p class="mt-0.5 max-w-xs truncate text-label-sm text-outline">
+                          {{ track.description }}
+                        </p>
+                      }
+                      @if (track.officialTrackUrl) {
+                        <a
+                          class="mt-1 inline-flex items-center gap-1 text-label-sm font-semibold text-primary hover:underline"
+                          [href]="track.officialTrackUrl"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {{ copy.text('Official ITI page', 'صفحة ITI الرسمية') }}
+                          <span class="material-symbols-outlined text-sm" aria-hidden="true"
+                            >open_in_new</span
+                          >
+                        </a>
+                      }
+                    </div>
+                  </td>
+                  <td class="px-5 py-3.5 text-body-sm text-on-surface-variant">
+                    {{ programName(track.programId) }}
+                  </td>
+                  <td class="px-5 py-3.5">
+                    <div class="min-w-40 space-y-1 text-label-sm text-on-surface-variant">
+                      <strong class="block text-body-sm text-on-surface">
+                        {{ track.category || copy.text('Not specified', 'غير محدد') }}
+                      </strong>
+                      <span class="block">
+                        {{ copy.text('Hours', 'الساعات') }}:
+                        {{
+                          track.totalHours === null
+                            ? copy.text('Not published', 'غير منشور')
+                            : track.totalHours
+                        }}
+                      </span>
+                      <span class="block">
+                        {{ copy.text('Minimum grade', 'الحد الأدنى للتقدير') }}:
+                        {{ track.minimumGrade || copy.text('Not specified', 'غير محدد') }}
+                      </span>
+                    </div>
+                  </td>
+                  <td class="px-5 py-3.5">
+                    <div class="min-w-36 space-y-1">
+                      @for (location of track.locations.slice(0, 2); track location.branchId) {
+                        <span class="block text-label-sm text-on-surface-variant">
+                          {{ location.branchName }}
+                        </span>
+                      }
+                      @if (track.locations.length > 2) {
+                        <span class="text-label-sm font-semibold text-primary">
+                          +{{ track.locations.length - 2 }}
+                        </span>
+                      }
+                      @if (track.locations.length === 0) {
+                        <span class="text-label-sm text-outline">
+                          {{ copy.text('Not published', 'غير منشور') }}
+                        </span>
+                      }
+                    </div>
+                  </td>
+                  <td class="px-5 py-3.5">
+                    <div class="flex flex-wrap gap-1">
+                      @for (topic of track.prerequisiteTopics.slice(0, 3); track topic) {
+                        <span
+                          class="inline-flex items-center rounded-full bg-surface-container px-2 py-0.5 text-label-sm text-on-surface-variant"
+                        >
+                          {{ topic }}
+                        </span>
+                      }
+                      @if (track.prerequisiteTopics.length > 3) {
+                        <span
+                          class="inline-flex items-center rounded-full bg-surface-container-high px-2 py-0.5 text-label-sm text-on-surface-variant"
+                        >
+                          +{{ track.prerequisiteTopics.length - 3 }}
+                        </span>
+                      }
+                      @if (track.prerequisiteTopics.length === 0) {
+                        <span class="text-label-sm text-outline">—</span>
+                      }
+                    </div>
+                  </td>
+                  <td class="px-5 py-3.5">
+                    @if (track.isActive) {
+                      <span
+                        class="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-label-sm font-semibold text-emerald-700"
+                      >
+                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                        {{ copy.text('Active', 'نشط') }}
+                      </span>
+                    } @else {
+                      <span
+                        class="inline-flex items-center gap-1 rounded-full border border-outline-variant bg-surface-container px-2.5 py-0.5 text-label-sm font-semibold text-on-surface-variant"
+                      >
+                        <span class="h-1.5 w-1.5 rounded-full bg-outline"></span>
+                        {{ copy.text('Inactive', 'غير نشط') }}
+                      </span>
+                    }
+                  </td>
+                  <td class="px-5 py-3.5 text-end">
+                    <button
+                      type="button"
+                      (click)="openDrawer(track)"
+                      [disabled]="busy()"
+                      class="inline-flex items-center gap-1 rounded-card px-2.5 py-1.5 text-label-sm text-primary transition-colors hover:bg-primary/5 disabled:opacity-50"
+                    >
+                      <span class="material-symbols-outlined text-base" aria-hidden="true">edit</span>
+                      {{ copy.text('Edit', 'تعديل') }}
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <!-- Empty State -->
+        <div class="flex flex-col items-center justify-center py-16 text-center">
+          <div
+            class="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-surface-container"
+          >
+            <span class="material-symbols-outlined text-2xl text-outline" aria-hidden="true"
+              >route</span
+            >
+          </div>
+          <p class="text-body-sm font-medium text-on-surface-variant">
+            @if (searchQuery()) {
+              {{ copy.text('No tracks match your search.', 'لا توجد مسارات تطابق بحثك.') }}
+            } @else {
+              {{ copy.text('No tracks configured yet.', 'لم تتم إضافة مسارات بعد.') }}
+            }
+          </p>
+          @if (!searchQuery() && editablePrograms().length > 0) {
+            <p class="mt-1 max-w-sm text-body-sm text-outline">
+              {{ copy.text('Get started by adding your first track.', 'ابدأ بإضافة أول مسار.') }}
+            </p>
+            <button
+              type="button"
+              (click)="openDrawer()"
+              class="mt-4 inline-flex items-center gap-1.5 rounded-card bg-primary px-4 py-2 text-label-md text-on-primary shadow-sm transition-colors hover:bg-primary-container"
+            >
+              <span class="material-symbols-outlined text-base" aria-hidden="true">add</span>
+              {{ copy.text('Add Track', 'إضافة مسار') }}
+            </button>
+          }
+          @if (programs().length === 0 && !searchQuery()) {
+            <p class="mt-1 max-w-sm text-body-sm text-outline">
+              {{
+                copy.text(
+                  'Add a program first before creating tracks.',
+                  'أضف برنامجًا أولاً قبل إنشاء المسارات.'
+                )
+              }}
+            </p>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Slide-over Drawer -->
+  @if (drawerOpen()) {
+    <!-- Backdrop -->
+    <div
+      class="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm transition-opacity"
+      (click)="closeDrawer()"
+      aria-hidden="true"
+    ></div>
+
+    <!-- Drawer Panel -->
+    <aside
+      class="fixed inset-y-0 z-50 flex w-full max-w-lg flex-col bg-white shadow-2xl ltr:right-0 rtl:left-0"
+      role="dialog"
+      [attr.aria-label]="
+        editingTrack()
+          ? copy.text('Edit Track', 'تعديل المسار')
+          : copy.text('Add Track', 'إضافة مسار')
+      "
+    >
+      <!-- Drawer Header -->
+      <header class="flex items-center justify-between border-b border-outline-variant px-6 py-4">
+        <div>
+          <h2 class="text-headline-md text-on-surface">
+            {{
+              editingTrack()
+                ? copy.text('Edit Track', 'تعديل المسار')
+                : copy.text('Add Track', 'إضافة مسار')
+            }}
+          </h2>
+          <p class="mt-0.5 text-body-sm text-on-surface-variant">
+            {{
+              copy.text(
+                'Configure track details, description, and prerequisite topics.',
+                'حدد تفاصيل المسار والوصف والموضوعات التمهيدية.'
+              )
+            }}
+          </p>
+        </div>
+        <button
+          type="button"
+          (click)="closeDrawer()"
+          class="flex h-9 w-9 items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-surface-container"
+        >
+          <span class="material-symbols-outlined" aria-hidden="true">close</span>
+        </button>
+      </header>
+
+      <!-- Drawer Body -->
+      <form
+        [formGroup]="trackForm"
+        (ngSubmit)="saveTrack()"
+        class="flex flex-1 flex-col overflow-y-auto"
+      >
+        <div class="flex-1 space-y-5 px-6 py-5">
+          <!-- Program Select -->
+          <div class="space-y-1.5">
+            <label for="drawer-track-program" class="block text-label-md text-on-surface-variant">
+              {{ copy.text('Program', 'البرنامج') }}
+            </label>
+            <select
+              id="drawer-track-program"
+              formControlName="programId"
+              class="w-full rounded-card border border-outline-variant bg-white px-3.5 py-2.5 text-body-sm text-on-surface outline-none transition-shadow focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:bg-surface-container-low disabled:text-outline"
+            >
+              <option value="">{{ copy.text('Select program', 'اختر البرنامج') }}</option>
+              @for (program of editablePrograms(); track program.id) {
+                <option [value]="program.id">{{ program.name }}</option>
+              }
+            </select>
+            @if (editingTrack()) {
+              <p class="text-label-sm text-outline">
+                {{
+                  copy.text(
+                    'A track cannot be moved to another program after creation.',
+                    'لا يمكن نقل المسار إلى برنامج آخر بعد إنشائه.'
+                  )
+                }}
+              </p>
+            }
+          </div>
+
+          <!-- Name Field -->
+          <div class="space-y-1.5">
+            <label for="drawer-track-name" class="block text-label-md text-on-surface-variant">
+              {{ copy.text('Track Name', 'اسم المسار') }}
+            </label>
+            <input
+              id="drawer-track-name"
+              formControlName="name"
+              maxlength="200"
+              [placeholder]="copy.text('e.g. Digital IC Design', 'مثال: Digital IC Design')"
+              class="w-full rounded-card border border-outline-variant bg-white px-3.5 py-2.5 text-body-sm text-on-surface placeholder:text-outline outline-none transition-shadow focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:bg-surface-container-low disabled:text-outline"
+            />
+          </div>
+
+          <!-- Description Field -->
+          <div class="space-y-1.5">
+            <label
+              for="drawer-track-description"
+              class="block text-label-md text-on-surface-variant"
+            >
+              {{ copy.text('Description', 'الوصف') }}
+            </label>
+            <textarea
+              id="drawer-track-description"
+              formControlName="description"
+              maxlength="4000"
+              rows="4"
+              [placeholder]="copy.text('Describe what this track covers…', 'صف محتوى هذا المسار…')"
+              class="w-full resize-y rounded-card border border-outline-variant bg-white px-3.5 py-2.5 text-body-sm text-on-surface placeholder:text-outline outline-none transition-shadow focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:bg-surface-container-low disabled:text-outline"
+            ></textarea>
+          </div>
+
+          <!-- Prerequisite Topics Field -->
+          <div class="space-y-1.5">
+            <label for="drawer-track-topics" class="block text-label-md text-on-surface-variant">
+              {{ copy.text('Prerequisite Topics', 'الموضوعات التمهيدية') }}
+            </label>
+            <textarea
+              id="drawer-track-topics"
+              formControlName="prerequisiteTopics"
+              rows="3"
+              [placeholder]="copy.text('C#, SQL, REST APIs', 'C#، SQL، REST APIs')"
+              class="w-full resize-y rounded-card border border-outline-variant bg-white px-3.5 py-2.5 text-body-sm text-on-surface placeholder:text-outline outline-none transition-shadow focus:border-primary focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:bg-surface-container-low disabled:text-outline"
+            ></textarea>
+            <p class="text-label-sm text-outline">
+              {{
+                copy.text(
+                  'Separate topics with commas or new lines. Maximum 50 unique topics.',
+                  'افصل الموضوعات بفاصلة أو سطر جديد، بحد أقصى 50 موضوعًا مختلفًا.'
+                )
+              }}
+            </p>
+          </div>
+
+          <!-- Active Toggle -->
+          <div
+            class="flex items-center gap-3 rounded-card border border-outline-variant bg-surface-container-low/50 px-4 py-3"
+          >
+            <input
+              id="drawer-track-active"
+              type="checkbox"
+              formControlName="isActive"
+              class="h-4 w-4 rounded border-outline-variant accent-primary"
+            />
+            <label for="drawer-track-active" class="text-body-sm text-on-surface">
+              {{ copy.text('Track is active', 'المسار نشط') }}
+            </label>
+          </div>
+        </div>
+
+        <!-- Drawer Footer -->
+        <div class="flex items-center justify-end gap-3 border-t border-outline-variant px-6 py-4">
+          <button
+            type="button"
+            (click)="closeDrawer()"
+            class="inline-flex items-center rounded-card border border-outline-variant bg-white px-4 py-2 text-label-md text-secondary transition-colors hover:bg-surface-container-low"
+          >
+            {{ copy.text('Cancel', 'إلغاء') }}
+          </button>
+          <button
+            type="submit"
+            [disabled]="busy()"
+            class="inline-flex items-center gap-1.5 rounded-card bg-primary px-4 py-2 text-label-md text-on-primary shadow-sm transition-colors hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <span class="material-symbols-outlined text-base" aria-hidden="true">save</span>
+            {{ editingTrack() ? copy.text('Update', 'تحديث') : copy.text('Save', 'حفظ') }}
+          </button>
+        </div>
+      </form>
+    </aside>
+  }
+</section>

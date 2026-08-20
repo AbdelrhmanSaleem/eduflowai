@@ -1,0 +1,35 @@
+// shared/ui/upload-progress/upload-progress.component.scss
+
+.upload-progress {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 10px; // --radius-sm, design.md
+    background: var(--border, #d9e0e8);
+    background: color-mix(in srgb, var(--border, #d9e0e8) 30%, transparent);
+
+    &__spinner {
+        flex-shrink: 0;
+        animation: upload-progress-spin 1s linear infinite;
+    }
+
+    &__text {
+        display: flex;
+        min-width: 0;
+        flex-direction: column;
+        gap: 0.125rem;
+    }
+}
+
+@keyframes upload-progress-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .upload-progress__spinner {
+        animation: none;
+    }
+}

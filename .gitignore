@@ -1,0 +1,18 @@
+# build output
+[Bb]in/
+[Oo]bj/
+dist/
+node_modules/
+
+# local configuration holding secrets
+appsettings.Development.json
+appsettings.*.Local.json
+.env
+
+# editor and OS
+.vs/
+.idea/
+.vscode/
+*.user
+Thumbs.db
+.DS_Store

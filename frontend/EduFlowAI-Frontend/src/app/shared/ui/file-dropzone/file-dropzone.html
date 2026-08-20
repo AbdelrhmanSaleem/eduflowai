@@ -1,0 +1,32 @@
+<div class="dropzone" [class]="containerClasses()" [class.dropzone--drag-active]="isDragOver()" role="button"
+    tabindex="0" [attr.aria-disabled]="disabled" [attr.aria-label]="ariaLabel" (click)="onZoneClick()"
+    (keydown.enter)="onZoneClick()" (keydown.space)="onZoneClick(); $event.preventDefault()"
+    (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
+    <input #fileInput type="file" class="dropzone__input" [accept]="acceptAttr()" [disabled]="disabled"
+        (change)="onInputChange($event)" />
+
+    <!-- Drag-over overlay -->
+    @if (isDragOver()) {
+    <div class="dropzone__drag-overlay">
+        <div class="dropzone__drag-overlay-ring"></div>
+        <div class="dropzone__drag-overlay-ring dropzone__drag-overlay-ring--delay"></div>
+        <lucide-angular [img]="UploadCloudIcon" class="dropzone__drag-overlay-icon" [size]="36" />
+        <span class="dropzone__drag-overlay-text">{{ locale.t('common.fileDropzone.dropHere') }}</span>
+    </div>
+    }
+
+    @if (errorMessage()) {
+    <lucide-angular [img]="AlertCircleIcon" class="text-[var(--red-700)]" [size]="24" />
+    <span class="text-[13px] font-medium text-[var(--red-700)]">
+        {{ errorMessage() }}
+    </span>
+    } @else {
+    <lucide-angular [img]="UploadCloudIcon" class="text-[var(--border-strong)]" [size]="28" />
+    <span class="text-[14px] font-medium text-[var(--navy-900)]">
+        {{ locale.t('common.fileDropzone.cta') }}
+    </span>
+    <span class="text-[13px] text-[#5B6472]">
+        {{ hintText() }}
+    </span>
+    }
+</div>

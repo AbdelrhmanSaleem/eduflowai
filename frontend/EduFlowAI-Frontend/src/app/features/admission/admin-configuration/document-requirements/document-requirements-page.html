@@ -1,0 +1,329 @@
+<section class="management-page" [attr.dir]="copy.isRtl() ? 'rtl' : 'ltr'">
+  <!-- Page Header -->
+  <header class="management-header">
+    <div>
+      <h1>{{ copy.text('Document Requirements', 'المستندات المطلوبة') }}</h1>
+      <p>
+        {{ copy.text('Map required documents to programs and target applicant genders.', 'حدد المستندات المطلوبة لكل برنامج حسب نوع المتقدم.') }}
+      </p>
+    </div>
+    <div class="flex items-center gap-3">
+      <button
+        type="button"
+        (click)="loadPrograms()"
+        [disabled]="loading()"
+        class="inline-flex items-center gap-1.5 rounded-card border border-outline-variant bg-white px-3.5 py-2 text-label-md text-secondary shadow-sm transition-colors hover:bg-surface-container-low disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        <span class="material-symbols-outlined text-base" aria-hidden="true">refresh</span>
+        {{ copy.text('Refresh', 'تحديث') }}
+      </button>
+    </div>
+  </header>
+
+    <!-- Success Message -->
+    @if (success()) {
+      <div class="mb-4 flex items-center gap-2 rounded-card border border-success-container bg-success-container/40 px-4 py-3 text-body-sm text-success" role="status">
+        <span class="material-symbols-outlined text-lg" aria-hidden="true">check_circle</span>
+        {{ success() }}
+      </div>
+    }
+
+    <!-- Error Message -->
+    @if (error()) {
+      <div class="mb-4 flex items-center gap-2 rounded-card border border-error-container bg-error-container/40 px-4 py-3 text-body-sm text-error" role="alert">
+        <span class="material-symbols-outlined text-lg" aria-hidden="true">error</span>
+        {{ error() }}
+      </div>
+    }
+
+    <!-- Loading State -->
+    @if (loading()) {
+      <div class="overflow-hidden rounded-panel border border-outline-variant bg-white shadow-card">
+        <div class="h-1 w-full overflow-hidden bg-surface-container">
+          <div class="h-full w-1/3 animate-pulse rounded-full bg-primary/40"></div>
+        </div>
+        <div class="flex items-center justify-center py-20">
+          <div class="flex flex-col items-center gap-3 text-on-surface-variant">
+            <span class="material-symbols-outlined animate-spin text-3xl" aria-hidden="true">progress_activity</span>
+            <span class="text-body-sm">{{ copy.text('Loading…', 'جارٍ التحميل…') }}</span>
+          </div>
+        </div>
+      </div>
+    } @else {
+      <!-- Program Selector Card -->
+      <div class="mb-5 rounded-panel border border-outline-variant bg-white p-5 shadow-card">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div class="w-full max-w-sm space-y-1.5">
+            <label for="program-selector" class="block text-label-md text-on-surface-variant">
+              {{ copy.text('Select Program', 'اختر البرنامج') }}
+            </label>
+            <select
+              id="program-selector"
+              [value]="requirementsProgramId()"
+              (change)="onProgramChange($event)"
+              class="w-full rounded-card border border-outline-variant bg-white px-3.5 py-2.5 text-body-sm text-on-surface outline-none transition-shadow focus:border-primary focus:ring-2 focus:ring-primary/15"
+            >
+              <option value="">{{ copy.text('Select a program…', 'اختر برنامجًا…') }}</option>
+              @for (program of programs(); track program.id) {
+                <option [value]="program.id">{{ program.name }}</option>
+              }
+            </select>
+          </div>
+          @if (selectedProgram()) {
+            <div class="flex items-center gap-3">
+              <span class="inline-flex items-center rounded-full bg-secondary-container/50 px-3 py-1 text-label-sm text-on-secondary-container">
+                {{ requirements().length }} / 12 {{ copy.text('requirements', 'متطلبات') }}
+              </span>
+              <button
+                type="button"
+                (click)="openDrawer()"
+                [disabled]="busy() || requirements().length >= 12"
+                class="inline-flex items-center gap-1.5 rounded-card bg-primary px-4 py-2 text-label-md text-on-primary shadow-sm transition-colors hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <span class="material-symbols-outlined text-base" aria-hidden="true">add</span>
+                {{ copy.text('Add Requirement', 'إضافة متطلب') }}
+              </button>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Requirements Table -->
+      @if (selectedProgram()) {
+        <div class="overflow-hidden rounded-panel border border-outline-variant bg-white shadow-card">
+
+          <!-- Table Toolbar -->
+          <div class="flex items-center justify-between border-b border-outline-variant px-5 py-4">
+            <div class="flex items-center gap-2">
+              <h2 class="text-label-md text-on-surface">
+                {{ copy.text('Requirements for', 'متطلبات') }}
+                <span class="font-semibold">{{ selectedProgram()?.name }}</span>
+              </h2>
+            </div>
+          </div>
+
+          @if (requirements().length > 0) {
+            <div class="overflow-x-auto">
+              <table class="w-full text-start">
+                <thead>
+                  <tr class="border-b border-outline-variant bg-surface-container-low/50">
+                    <th class="w-12 px-5 py-3 text-start text-label-sm uppercase tracking-wider text-on-surface-variant">
+                      #
+                    </th>
+                    <th class="px-5 py-3 text-start text-label-sm uppercase tracking-wider text-on-surface-variant">
+                      {{ copy.text('Document Type', 'نوع المستند') }}
+                    </th>
+                    <th class="px-5 py-3 text-start text-label-sm uppercase tracking-wider text-on-surface-variant">
+                      {{ copy.text('Required For', 'مطلوب من') }}
+                    </th>
+                    <th class="px-5 py-3 text-end text-label-sm uppercase tracking-wider text-on-surface-variant">
+                      {{ copy.text('Actions', 'إجراءات') }}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-outline-variant/50">
+                  @for (requirement of requirements(); track $index) {
+                    <tr class="transition-colors hover:bg-surface-container-low/30">
+                      <td class="px-5 py-3.5 text-body-sm text-outline">
+                        {{ $index + 1 }}
+                      </td>
+                      <td class="px-5 py-3.5">
+                        <div class="flex items-center gap-2">
+                          <span class="material-symbols-outlined text-lg text-on-surface-variant" aria-hidden="true">description</span>
+                          <span class="text-body-sm font-semibold text-on-surface">
+                            {{ documentTypeLabel(requirement.documentType) }}
+                          </span>
+                        </div>
+                      </td>
+                      <td class="px-5 py-3.5">
+                        <span
+                          class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-label-sm font-semibold"
+                          [class]="genderBadgeClasses(requirement.requiredForGender)"
+                        >
+                          {{ genderLabel(requirement.requiredForGender) }}
+                        </span>
+                      </td>
+                      <td class="px-5 py-3.5 text-end">
+                        <button
+                          type="button"
+                          (click)="removeRequirement($index)"
+                          class="inline-flex items-center gap-1 rounded-card px-2.5 py-1.5 text-label-sm text-error transition-colors hover:bg-error/5"
+                        >
+                          <span class="material-symbols-outlined text-base" aria-hidden="true">delete</span>
+                          {{ copy.text('Remove', 'حذف') }}
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Save Action -->
+            <div class="flex items-center justify-end border-t border-outline-variant px-5 py-4">
+              <button
+                type="button"
+                (click)="saveRequirements()"
+                [disabled]="busy() || requirements().length === 0"
+                class="inline-flex items-center gap-1.5 rounded-card bg-primary px-5 py-2.5 text-label-md text-on-primary shadow-sm transition-colors hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <span class="material-symbols-outlined text-base" aria-hidden="true">save</span>
+                {{ copy.text('Save Requirements', 'حفظ المتطلبات') }}
+              </button>
+            </div>
+          } @else {
+            <!-- Empty Requirements State -->
+            <div class="flex flex-col items-center justify-center py-16 text-center">
+              <div class="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-surface-container">
+                <span class="material-symbols-outlined text-2xl text-outline" aria-hidden="true">folder_off</span>
+              </div>
+              <p class="text-body-sm font-medium text-on-surface-variant">
+                {{ copy.text('No document requirements configured for this program.', 'لم تتم إضافة متطلبات مستندات لهذا البرنامج.') }}
+              </p>
+              <p class="mt-1 max-w-sm text-body-sm text-outline">
+                {{ copy.text('Add at least one document requirement and save.', 'أضف مستندًا مطلوبًا واحدًا على الأقل واحفظه.') }}
+              </p>
+              <button
+                type="button"
+                (click)="openDrawer()"
+                class="mt-4 inline-flex items-center gap-1.5 rounded-card bg-primary px-4 py-2 text-label-md text-on-primary shadow-sm transition-colors hover:bg-primary-container"
+              >
+                <span class="material-symbols-outlined text-base" aria-hidden="true">add</span>
+                {{ copy.text('Add Requirement', 'إضافة متطلب') }}
+              </button>
+            </div>
+          }
+        </div>
+      } @else {
+        <!-- No Program Selected State -->
+        <div class="overflow-hidden rounded-panel border border-outline-variant bg-white shadow-card">
+          <div class="flex flex-col items-center justify-center py-20 text-center">
+            <div class="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-surface-container">
+              <span class="material-symbols-outlined text-2xl text-outline" aria-hidden="true">touch_app</span>
+            </div>
+            <p class="text-body-sm font-medium text-on-surface-variant">
+              {{ copy.text('Select a program to manage its document requirements.', 'اختر برنامجًا لإدارة مستنداته المطلوبة.') }}
+            </p>
+            <p class="mt-1 max-w-sm text-body-sm text-outline">
+              {{ copy.text('The system resolves all-gender and gender-specific requirements for each applicant.', 'يجمع النظام المستندات العامة والمستندات الخاصة بنوع المتقدم.') }}
+            </p>
+          </div>
+        </div>
+      }
+    }
+
+  <!-- Slide-over Drawer for Adding Requirement -->
+  @if (drawerOpen()) {
+    <!-- Backdrop -->
+    <div
+      class="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm transition-opacity"
+      (click)="closeDrawer()"
+      aria-hidden="true"
+    ></div>
+
+    <!-- Drawer Panel -->
+    <aside
+      class="fixed inset-y-0 z-50 flex w-full max-w-md flex-col bg-white shadow-2xl ltr:right-0 rtl:left-0"
+      role="dialog"
+      [attr.aria-label]="copy.text('Add Requirement', 'إضافة متطلب')"
+    >
+      <!-- Drawer Header -->
+      <header class="flex items-center justify-between border-b border-outline-variant px-6 py-4">
+        <div>
+          <h2 class="text-headline-md text-on-surface">
+            {{ copy.text('Add Requirement', 'إضافة متطلب') }}
+          </h2>
+          <p class="mt-0.5 text-body-sm text-on-surface-variant">
+            {{ copy.text('Select a document type and target gender.', 'اختر نوع المستند والفئة المستهدفة.') }}
+          </p>
+        </div>
+        <button
+          type="button"
+          (click)="closeDrawer()"
+          class="flex h-9 w-9 items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-surface-container"
+        >
+          <span class="material-symbols-outlined" aria-hidden="true">close</span>
+        </button>
+      </header>
+
+      <!-- Drawer Body -->
+      <form
+        [formGroup]="requirementForm"
+        (ngSubmit)="addRequirement()"
+        class="flex flex-1 flex-col overflow-y-auto"
+      >
+        <div class="flex-1 space-y-5 px-6 py-5">
+          <!-- Document Type Select -->
+          <div class="space-y-1.5">
+            <label for="drawer-doc-type" class="block text-label-md text-on-surface-variant">
+              {{ copy.text('Document Type', 'نوع المستند') }}
+            </label>
+            <select
+              id="drawer-doc-type"
+              formControlName="documentType"
+              class="w-full rounded-card border border-outline-variant bg-white px-3.5 py-2.5 text-body-sm text-on-surface outline-none transition-shadow focus:border-primary focus:ring-2 focus:ring-primary/15"
+            >
+              @for (option of documentTypes; track option.value) {
+                <option [ngValue]="option.value">{{ copy.text(option.en, option.ar) }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Gender Select -->
+          <div class="space-y-1.5">
+            <label for="drawer-doc-gender" class="block text-label-md text-on-surface-variant">
+              {{ copy.text('Required For', 'مطلوب من') }}
+            </label>
+            <select
+              id="drawer-doc-gender"
+              formControlName="requiredForGender"
+              class="w-full rounded-card border border-outline-variant bg-white px-3.5 py-2.5 text-body-sm text-on-surface outline-none transition-shadow focus:border-primary focus:ring-2 focus:ring-primary/15"
+            >
+              @for (option of genders; track option.en) {
+                <option [ngValue]="option.value">{{ copy.text(option.en, option.ar) }}</option>
+              }
+            </select>
+            <p class="text-label-sm text-outline">
+              {{ copy.text('"All genders" means this document is required for every applicant.', '"جميع المتقدمين" يعني أن هذا المستند مطلوب من الجميع.') }}
+            </p>
+          </div>
+
+          <!-- Preview Badge -->
+          <div class="rounded-card border border-outline-variant bg-surface-container-low/50 p-4">
+            <p class="mb-2 text-label-sm text-on-surface-variant">{{ copy.text('Preview', 'معاينة') }}</p>
+            <div class="flex items-center gap-3">
+              <span class="text-body-sm font-semibold text-on-surface">
+                {{ documentTypeLabel(requirementForm.controls.documentType.value) }}
+              </span>
+              <span
+                class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-label-sm font-semibold"
+                [class]="genderBadgeClasses(requirementForm.controls.requiredForGender.value)"
+              >
+                {{ genderLabel(requirementForm.controls.requiredForGender.value) }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Drawer Footer -->
+        <div class="flex items-center justify-end gap-3 border-t border-outline-variant px-6 py-4">
+          <button
+            type="button"
+            (click)="closeDrawer()"
+            class="inline-flex items-center rounded-card border border-outline-variant bg-white px-4 py-2 text-label-md text-secondary transition-colors hover:bg-surface-container-low"
+          >
+            {{ copy.text('Cancel', 'إلغاء') }}
+          </button>
+          <button
+            type="submit"
+            [disabled]="busy()"
+            class="inline-flex items-center gap-1.5 rounded-card bg-primary px-4 py-2 text-label-md text-on-primary shadow-sm transition-colors hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <span class="material-symbols-outlined text-base" aria-hidden="true">add</span>
+            {{ copy.text('Add', 'إضافة') }}
+          </button>
+        </div>
+      </form>
+    </aside>
+  }
+</section>

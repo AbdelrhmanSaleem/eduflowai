@@ -1,0 +1,175 @@
+<div class="page">
+  <!-- Header -->
+  <div class="page__header">
+    <div>
+      <h2 class="text-[24px] font-semibold text-[var(--navy-900)]">{{ locale.t('documents.page.title') }}</h2>
+      <p class="page__header-sub">
+        <lucide-angular [img]="InfoIcon" [size]="18" class="text-[#5B6472]" />
+        {{ locale.t('documents.page.summary', { uploaded: uploadedCount(), total: store.requiredTypes().length }) }}
+      </p>
+    </div>
+
+    <div class="page__progress">
+      <div class="page__progress-labels">
+        <span>{{ locale.t('documents.page.progressLabel') }}</span>
+        <span>{{ progressPercent() }}%</span>
+      </div>
+      <div class="page__progress-track">
+        <div class="page__progress-fill" [style.width.%]="progressPercent()"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading skeleton -->
+  @if (store.loading()) {
+  <span class="sr-only" aria-live="polite">{{ locale.t('documents.page.loadingSr') }}</span>
+  <div class="page__grid" aria-hidden="true">
+    @for (i of [1, 2, 3]; track i) {
+    <div class="card card--skeleton">
+      <div class="skeleton-line skeleton-line--title"></div>
+      <div class="skeleton-line skeleton-line--body"></div>
+    </div>
+    }
+  </div>
+  }
+
+  <!-- Error state -->
+  @if (store.error()) {
+  <div class="page__error">
+    <lucide-angular [img]="TriangleAlertIcon" [size]="18" class="text-[var(--red-700)]" />
+    <span class="text-[14px] text-[var(--red-700)]">{{ store.error() }}</span>
+    <button type="button" class="link-button page__error-retry" (click)="retry()">
+      {{ locale.t('documents.page.retry') }}
+    </button>
+  </div>
+  }
+
+  <!-- Empty state: no documents required for this application -->
+  @if (!store.loading() && !store.error() && store.requiredTypes().length === 0) {
+  <div class="page__empty">
+    <lucide-angular [img]="InfoIcon" [size]="28" class="text-[#5B6472]" />
+    <p class="text-[14px] text-[#5B6472]">
+      {{ locale.t('documents.page.empty') }}
+    </p>
+  </div>
+  }
+
+  <!-- Document cards -->
+  @if (!store.loading() && store.requiredTypes().length > 0) {
+  <div class="page__grid">
+    @for (type of store.requiredTypes(); track type) {
+    <div class="card" [class.card--uploaded]="store.documentByType().get(type)?.status === DocumentStatus.Uploaded"
+      [class.card--rejected]="store.documentByType().get(type)?.status === DocumentStatus.Rejected">
+      <div class="card__header">
+        <h3 class="text-[18px] font-semibold text-[var(--navy-900)]">
+          {{ typeLabel(type) }}
+        </h3>
+
+        @if (!store.uploadingTypes().has(type)) {
+        @switch (store.documentByType().get(type)?.status) {
+        @case (DocumentStatus.Uploaded) {
+        <span class="badge badge--success">
+          <lucide-angular [img]="CircleCheckIcon" [size]="14" />
+          {{ statusLabel(DocumentStatus.Uploaded) }}
+        </span>
+        }
+        @case (DocumentStatus.Verifying) {
+        <span class="badge badge--neutral">{{ statusLabel(DocumentStatus.Verifying) }}</span>
+        }
+        @case (DocumentStatus.Approved) {
+        <span class="badge badge--success">
+          <lucide-angular [img]="CircleCheckIcon" [size]="14" />
+          {{ statusLabel(DocumentStatus.Approved) }}
+        </span>
+        }
+        @case (DocumentStatus.NeedsHumanReview) {
+        <span class="badge badge--amber">{{ statusLabel(DocumentStatus.NeedsHumanReview) }}</span>
+        }
+        @case (DocumentStatus.Rejected) {
+        <span class="badge badge--error">
+          <lucide-angular [img]="TriangleAlertIcon" [size]="14" />
+          {{ statusLabel(DocumentStatus.Rejected) }}
+        </span>
+        }
+        @default {
+        <span class="badge badge--neutral">{{ statusLabel(undefined) }}</span>
+        }
+        }
+        }
+      </div>
+
+      <!-- Currently uploading -->
+      @if (store.uploadingTypes().has(type)) {
+      <app-upload-progress [label]="locale.t('documents.page.uploading')" />
+      }
+
+      <!-- Verifying: reuse the same indeterminate visual language -->
+      @else if (store.documentByType().get(type)?.status === DocumentStatus.Verifying) {
+      <app-upload-progress [label]="locale.t('documents.page.verifying')"
+        [fileName]="store.documentByType().get(type)?.originalFileName ?? null" />
+      }
+
+      <!-- Rejected: point to replacement flow, no direct re-upload here -->
+      @else if (store.documentByType().get(type)?.status === DocumentStatus.Rejected) {
+      <div class="card__rejected-box">
+        <lucide-angular [img]="TriangleAlertIcon" [size]="24" class="text-[var(--red-700)]" />
+        <p class="text-[14px] text-[var(--red-700)]">{{ locale.t('documents.page.rejectedTitle') }}</p>
+        <p class="text-[13px] text-[#5B6472]">{{ locale.t('documents.page.rejectedBody') }}</p>
+      </div>
+      }
+
+      <!-- Uploaded or Approved, and not currently replacing: show file info -->
+      @else if (
+      store.documentByType().get(type) &&
+      !isReplacing(type) &&
+      (store.documentByType().get(type)?.status === DocumentStatus.Uploaded ||
+      store.documentByType().get(type)?.status === DocumentStatus.Approved)
+      ) {
+      <div class="card__file-info">
+        <span class="text-[14px] text-[var(--navy-900)] truncate">
+          {{ store.documentByType().get(type)?.originalFileName }}
+        </span>
+      </div>
+
+      <div class="card__actions">
+        <button type="button" class="link-button" (click)="viewFile(store.documentByType().get(type)!)">
+          <lucide-angular [img]="EyeIcon" [size]="16" />
+          {{ locale.t('documents.page.view') }}
+        </button>
+
+        @if (store.documentByType().get(type)?.status === DocumentStatus.Uploaded) {
+        <button type="button" class="link-button" (click)="toggleReplace(type)">
+          <lucide-angular [img]="RotateCcwIcon" [size]="16" />
+          {{ locale.t('documents.page.replace') }}
+        </button>
+        }
+      </div>
+      }
+
+      <!-- No document yet, or Replace was clicked: show the dropzone -->
+      @else {
+      <app-file-dropzone (fileSelected)="onFileSelected(type, $event)" />
+      }
+    </div>
+    }
+  </div>
+
+  <!-- Footer -->
+  <div class="page__footer">
+    @if (store.missingTypes().length > 0) {
+    <p class="page__footer-warning">
+      <lucide-angular [img]="TriangleAlertIcon" [size]="18" class="text-[#5B6472]" />
+      {{ locale.t('documents.page.missingWarning', { total: store.requiredTypes().length }) }}
+    </p>
+    } @else {
+    <span></span>
+    }
+
+    <button type="button" class="submit-button" [disabled]="!store.canSubmit()" (click)="onSubmit()">
+      {{ store.submitting() ? locale.t('documents.page.submitting') : locale.t('documents.page.submit') }}
+    </button>
+  </div>
+  }
+
+  <app-secure-file-viewer [fileFetcher]="fetchFile" />
+</div>

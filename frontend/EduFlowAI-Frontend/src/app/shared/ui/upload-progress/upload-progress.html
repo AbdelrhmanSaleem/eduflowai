@@ -1,0 +1,14 @@
+<div class="upload-progress" role="status" aria-live="polite">
+    <lucide-angular [img]="LoaderIcon" class="upload-progress__spinner text-[var(--navy-900)]" [size]="20" />
+
+    <div class="upload-progress__text">
+        <span class="text-[14px] font-medium text-[var(--navy-900)]">
+            {{ label }}
+        </span>
+        @if (fileName) {
+        <span class="text-[13px] text-[#5B6472] truncate">
+            {{ fileName }}
+        </span>
+        }
+    </div>
+</div>

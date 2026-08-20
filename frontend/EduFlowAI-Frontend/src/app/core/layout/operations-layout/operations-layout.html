@@ -1,0 +1,70 @@
+<div class="role-shell">
+  <aside
+    class="sidebar"
+    [class.sidebar--open]="menuOpen()"
+    [attr.aria-label]="locale.t('layout.operations.navigation')"
+  >
+    <a
+      class="brand"
+      routerLink="/operations/document-reviews"
+      [attr.aria-label]="locale.t('app.name')"
+      (click)="closeMenu()"
+    >
+      <span class="brand__logo" aria-hidden="true">
+        <img src="/edu-logo-dark.png" alt="" width="1536" height="1024" />
+      </span>
+    </a>
+
+    <nav class="sidebar__nav">
+      <a routerLink="/operations/document-reviews" routerLinkActive="active" (click)="closeMenu()">
+        <span class="material-symbols-outlined" aria-hidden="true">fact_check</span>
+        {{ locale.t('layout.operations.reviewQueue') }}
+      </a>
+    </nav>
+
+    <div class="sidebar__account">
+      <span class="account-avatar" aria-hidden="true">{{
+        session.email()?.charAt(0)?.toUpperCase() || 'O'
+      }}</span>
+      <span class="account-copy"
+        ><strong>{{ locale.t('layout.operations.role') }}</strong
+        ><small>{{ session.email() }}</small></span
+      >
+      <button type="button" [attr.aria-label]="locale.t('common.logout')" (click)="logout()">
+        <span class="material-symbols-outlined" aria-hidden="true">logout</span>
+      </button>
+    </div>
+  </aside>
+
+  @if (menuOpen()) {
+    <button
+      class="sidebar-backdrop"
+      type="button"
+      [attr.aria-label]="locale.t('layout.closeNavigation')"
+      (click)="closeMenu()"
+    ></button>
+  }
+
+  <section class="workspace">
+    <header class="topbar">
+      <button
+        class="icon-button menu-button"
+        type="button"
+        [attr.aria-expanded]="menuOpen()"
+        [attr.aria-label]="locale.t('layout.openNavigation')"
+        (click)="menuOpen.set(!menuOpen())"
+      >
+        <span class="material-symbols-outlined" aria-hidden="true">menu</span>
+      </button>
+      <span class="topbar__title">{{ locale.t('layout.operations.title') }}</span>
+      <div class="topbar__actions">
+        <!--00 <button class="language-button" type="button" (click)="locale.toggle()">
+          <span class="material-symbols-outlined" aria-hidden="true">language</span
+          >{{ locale.t('common.language') }}
+        </button> -->
+      </div>
+    </header>
+
+    <main class="workspace__content"><router-outlet /></main>
+  </section>
+</div>

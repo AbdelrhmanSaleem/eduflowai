@@ -1,0 +1,97 @@
+@host = http://localhost:5232
+@accessToken = paste-jwt-here
+@confirmationToken = paste-development-token-here
+@resetToken = paste-development-token-here
+@operationsManagerId = 00000000-0000-0000-0000-000000000000
+
+### Register applicant
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "applicant@example.com",
+  "password": "Applicant123",
+  "preferredLanguage": "en"
+}
+
+### Confirm applicant email
+POST {{host}}/api/auth/confirm-email
+Content-Type: application/json
+
+{
+  "email": "applicant@example.com",
+  "token": "{{confirmationToken}}"
+}
+
+### Login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "applicant@example.com",
+  "password": "Applicant123"
+}
+
+### Get applicant profile
+GET {{host}}/api/profile
+Authorization: Bearer {{accessToken}}
+Accept: application/json
+
+### Create or update applicant profile
+PUT {{host}}/api/profile
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "fullNameEn": "Test Applicant",
+  "fullNameAr": "متقدم تجريبي",
+  "nationalId": "30001010123456",
+  "nationality": "EG",
+  "dateOfBirth": "2000-01-01",
+  "gender": "Female",
+  "address": "Cairo",
+  "governorate": "Cairo",
+  "university": "Test University",
+  "faculty": "Engineering",
+  "degreeLevel": "Bachelor",
+  "major": "Computer Engineering",
+  "graduationYear": 2024,
+  "cumulativeGrade": "VeryGood",
+  "militaryStatus": null,
+  "phoneNumber": "+201001234567",
+  "preferredLanguage": "en",
+  "gmailNotificationsEnabled": false
+}
+
+### Request password reset
+POST {{host}}/api/auth/forgot-password
+Content-Type: application/json
+
+{
+  "email": "applicant@example.com"
+}
+
+### Reset password
+POST {{host}}/api/auth/reset-password
+Content-Type: application/json
+
+{
+  "email": "applicant@example.com",
+  "token": "{{resetToken}}",
+  "newPassword": "Applicant456"
+}
+
+### Create Operations Manager (requires SuperAdmin token)
+POST {{host}}/api/admin/operations-managers
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "email": "operations@example.com",
+  "password": "Operations123",
+  "preferredLanguage": "en"
+}
+
+### Deactivate Operations Manager (requires SuperAdmin token)
+PATCH {{host}}/api/admin/operations-managers/{{operationsManagerId}}/deactivate
+Authorization: Bearer {{accessToken}}

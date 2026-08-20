@@ -1,0 +1,23 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="EduFlowAI.Api/EduFlowAI.Api.csproj" />
+    <Project Path="EduFlowAI.Worker/EduFlowAI.Worker.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/">
+    <Project Path="EduFlowAI.Admission/EduFlowAI.Admission.csproj" />
+    <Project Path="EduFlowAI.AI/EduFlowAI.AI.csproj" />
+    <Project Path="EduFlowAI.Communication/EduFlowAI.Communication.csproj" />
+    <Project Path="EduFlowAI.Documents/EduFlowAI.Documents.csproj" />
+    <Project Path="EduFlowAI.Identity/EduFlowAI.Identity.csproj" />
+  </Folder>
+  <Folder Name="/src/Shared/">
+    <Project Path="EduFlowAI.Persistence/EduFlowAI.Persistence.csproj" />
+    <Project Path="EduFlowAI.Shared.Kernel/EduFlowAI.Shared.Kernel.csproj" />
+    <Project Path="EduFlowAI.Shared.Messaging.Contracts/EduFlowAI.Shared.Messaging.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/src/Tests/">
+    <Project Path="EduFlowAI.Admission.Tests/EduFlowAI.Admission.Tests.csproj" />
+    <Project Path="EduFlowAI.AI.Tests/EduFlowAI.AI.Tests.csproj" />
+    <Project Path="EduFlowAI.Identity.Tests/EduFlowAI.Identity.Tests.csproj" />
+  </Folder>
+</Solution>

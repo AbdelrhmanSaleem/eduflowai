@@ -1,0 +1,90 @@
+<div class="workspace-shell">
+  <aside class="sidebar" [class.sidebar--open]="menuOpen()" [attr.aria-label]="locale.t('layout.applicant.navigation')">
+    <a
+      class="brand"
+      routerLink="/applicant/profile"
+      [attr.aria-label]="locale.t('app.name')"
+      (click)="closeMenu()"
+    >
+      <span class="brand__logo" aria-hidden="true">
+        <img src="/edu-logo-dark.png" alt="" width="1536" height="1024" />
+      </span>
+    </a>
+
+    <nav class="sidebar__nav">
+      <a routerLink="/applicant/profile" routerLinkActive="sidebar__link--active" (click)="closeMenu()">
+        <span class="material-symbols-outlined" aria-hidden="true">person</span>
+        {{ locale.t('layout.applicant.profile') }}
+      </a>
+      <a routerLink="/applications" routerLinkActive="sidebar__link--active" (click)="closeMenu()">
+        <span class="material-symbols-outlined" aria-hidden="true">
+          description
+        </span>
+        {{ locale.t('layout.applicant.applications') }}
+      </a>
+      <a
+        routerLink="/replacement-requests"
+        routerLinkActive="sidebar__link--active"
+        (click)="closeMenu()"
+      >
+        <span class="material-symbols-outlined" aria-hidden="true">
+          folder_copy
+        </span>
+        {{ locale.t('layout.applicant.replacementRequests') }}
+      </a>
+      <a
+        routerLink="/applicant/notifications"
+        routerLinkActive="sidebar__link--active"
+        (click)="closeMenu()"
+      >
+        <span class="material-symbols-outlined" aria-hidden="true">
+          notifications
+        </span>
+        {{ locale.t('layout.applicant.notifications') }}
+      </a>
+      <!--00 <a routerLink="/applicant/documents" routerLinkActive="sidebar__link--active" (click)="closeMenu()">
+        <span class="material-symbols-outlined" aria-hidden="true">
+          folder
+        </span>
+        {{ locale.t('layout.applicant.documents') }}
+      </a> -->
+    </nav>
+
+    <div class="sidebar__account">
+      <span class="account-avatar" aria-hidden="true">
+        {{ session.email()?.charAt(0)?.toUpperCase() || 'A' }}
+      </span>
+      <span class="account-copy">
+        <strong>{{ locale.t('layout.applicant.role') }}</strong>
+        <small>{{ session.email() }}</small>
+      </span>
+      <button type="button" (click)="logout()">
+        <span class="material-symbols-outlined" aria-hidden="true">logout</span>
+        <span class="sr-only">{{ locale.t('common.logout') }}</span>
+      </button>
+    </div>
+  </aside>
+
+  @if (menuOpen()) {
+  <button class="sidebar-backdrop" type="button" [attr.aria-label]="locale.t('layout.closeNavigation')"
+    (click)="closeMenu()"></button>
+  }
+
+  <section class="workspace">
+    <header class="topbar">
+      <button class="menu-button" type="button" [attr.aria-expanded]="menuOpen()"
+        [attr.aria-label]="locale.t('layout.openNavigation')" (click)="menuOpen.set(!menuOpen())">
+        <span class="material-symbols-outlined" aria-hidden="true">menu</span>
+      </button>
+      <span class="topbar__title">{{ locale.t('app.name') }}</span>
+      <!--00 <button class="topbar__language" type="button" (click)="locale.toggle()">
+        <span class="material-symbols-outlined" aria-hidden="true">language</span>
+        {{ locale.t('common.language') }}
+      </button> -->
+    </header>
+
+    <main class="workspace__content">
+      <router-outlet />
+    </main>
+  </section>
+</div>

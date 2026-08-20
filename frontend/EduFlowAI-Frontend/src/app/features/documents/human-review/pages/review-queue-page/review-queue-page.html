@@ -1,0 +1,210 @@
+<section class="review-queue" aria-labelledby="review-queue-title">
+  <header class="page-header">
+    <div>
+      <span class="eyebrow">{{ copy().queue.eyebrow }}</span>
+      <h1 id="review-queue-title">{{ copy().queue.title }}</h1>
+      <p>{{ copy().queue.subtitle }}</p>
+    </div>
+    <div class="page-header__actions">
+      @if (page(); as queuePage) {
+        <span class="pending-count">
+          {{ copy().queue.pending }} <strong>{{ queuePage.totalCount }}</strong>
+        </span>
+      }
+      <button
+        class="button button--secondary"
+        type="button"
+        [disabled]="loading()"
+        (click)="refresh()"
+      >
+        <span class="material-symbols-outlined" aria-hidden="true">refresh</span>
+        {{ loading() ? copy().queue.refreshing : copy().queue.refresh }}
+      </button>
+    </div>
+  </header>
+
+  @if (successMessage()) {
+    <div class="feedback-banner feedback-banner--success" role="status">
+      <span class="material-symbols-outlined" aria-hidden="true">task_alt</span>
+      <span>{{ successMessage() }}</span>
+      <button
+        type="button"
+        [attr.aria-label]="copy().common.close"
+        (click)="successMessage.set('')"
+      >
+        <span class="material-symbols-outlined" aria-hidden="true">close</span>
+      </button>
+    </div>
+  }
+
+  <div class="queue-toolbar" role="search">
+    <label class="search-box">
+      <span class="material-symbols-outlined" aria-hidden="true">search</span>
+      <span class="sr-only">{{ copy().queue.search }}</span>
+      <input type="search" [formControl]="searchControl" [placeholder]="copy().queue.search" />
+    </label>
+
+    <label class="select-field">
+      <span>{{ copy().queue.documentType }}</span>
+      <select [formControl]="typeControl">
+        <option value="">{{ copy().queue.allDocumentTypes }}</option>
+        @for (type of documentTypes; track type) {
+          <option [value]="type">{{ documentTypeLabel(type) }}</option>
+        }
+      </select>
+    </label>
+
+    <label class="select-field">
+      <span>{{ copy().queue.status }}</span>
+      <select [formControl]="statusControl">
+        <option value="">{{ copy().queue.allStatuses }}</option>
+        @for (status of statuses; track status) {
+          <option [value]="status">{{ statusLabel(status) }}</option>
+        }
+      </select>
+    </label>
+
+    @if (hasFilters()) {
+      <button class="clear-button" type="button" (click)="clearFilters()">
+        {{ copy().queue.clearFilters }}
+      </button>
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="state-card" aria-live="polite">
+      <span class="material-symbols-outlined state-card__icon" aria-hidden="true"
+        >pending_actions</span
+      >
+      <h2>{{ copy().queue.loading }}</h2>
+      <p>{{ copy().queue.loadingCopy }}</p>
+    </div>
+  } @else if (error()) {
+    <div class="state-card state-card--error" role="alert">
+      <span class="material-symbols-outlined state-card__icon" aria-hidden="true">cloud_off</span>
+      <h2>{{ copy().queue.errorTitle }}</h2>
+      <p>{{ copy().queue.errorCopy }}</p>
+      <button class="button button--secondary" type="button" (click)="refresh()">
+        {{ copy().common.retry }}
+      </button>
+    </div>
+  } @else if (page(); as queuePage) {
+    @if (queuePage.totalCount === 0 && hasFilters()) {
+      <div class="state-card">
+        <span class="material-symbols-outlined state-card__icon" aria-hidden="true"
+          >search_off</span
+        >
+        <h2>{{ copy().queue.noResultsTitle }}</h2>
+        <p>{{ copy().queue.noResultsCopy }}</p>
+        <button class="button button--secondary" type="button" (click)="clearFilters()">
+          {{ copy().queue.clearFilters }}
+        </button>
+      </div>
+    } @else if (queuePage.totalCount === 0) {
+      <div class="state-card state-card--clear">
+        <span class="material-symbols-outlined state-card__icon" aria-hidden="true">task_alt</span>
+        <h2>{{ copy().queue.emptyTitle }}</h2>
+        <p>{{ copy().queue.emptyCopy }}</p>
+      </div>
+    } @else {
+      <div class="queue-surface">
+        <div class="desktop-table">
+          <table>
+            <thead>
+              <tr>
+                <th>{{ copy().queue.applicant }}</th>
+                <th>{{ copy().queue.documentType }}</th>
+                <th>{{ copy().queue.status }}</th>
+                <th>{{ copy().queue.action }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of queuePage.data; track item.documentId) {
+                <tr>
+                  <td>
+                    <span class="applicant-cell">
+                      <span class="avatar" aria-hidden="true">{{ initials(item) }}</span>
+                      <strong>{{ applicantName(item) }}</strong>
+                    </span>
+                  </td>
+                  <td>{{ documentTypeLabel(item.documentType) }}</td>
+                  <td>
+                    <span class="status-pill" [attr.data-status]="item.status">{{
+                      statusLabel(item.status)
+                    }}</span>
+                  </td>
+                  <td>
+                    <a class="review-link" [routerLink]="[item.documentId]">
+                      {{ copy().queue.review }}
+                      <span class="material-symbols-outlined" aria-hidden="true"
+                        >arrow_forward</span
+                      >
+                    </a>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="mobile-cards">
+          @for (item of queuePage.data; track item.documentId) {
+            <article class="review-card">
+              <header>
+                <span class="applicant-cell">
+                  <span class="avatar" aria-hidden="true">{{ initials(item) }}</span>
+                  <strong>{{ applicantName(item) }}</strong>
+                </span>
+                <span class="status-pill" [attr.data-status]="item.status">{{
+                  statusLabel(item.status)
+                }}</span>
+              </header>
+              <dl>
+                <div>
+                  <dt>{{ copy().queue.documentType }}</dt>
+                  <dd>{{ documentTypeLabel(item.documentType) }}</dd>
+                </div>
+              </dl>
+              <a class="review-link" [routerLink]="[item.documentId]">
+                {{ copy().queue.review }}
+                <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+              </a>
+            </article>
+          }
+        </div>
+
+        <footer class="pagination">
+          <span>{{ resultsLabel() }}</span>
+          <nav [attr.aria-label]="pageLabel()">
+            <button
+              type="button"
+              [disabled]="currentPage() === 1"
+              [attr.aria-label]="copy().queue.previousPage"
+              (click)="goToPage(currentPage() - 1)"
+            >
+              <span class="material-symbols-outlined" aria-hidden="true">chevron_left</span>
+            </button>
+            @for (pageNumber of pageNumbers(); track pageNumber) {
+              <button
+                type="button"
+                [class.active]="pageNumber === currentPage()"
+                [attr.aria-current]="pageNumber === currentPage() ? 'page' : null"
+                (click)="goToPage(pageNumber)"
+              >
+                {{ pageNumber }}
+              </button>
+            }
+            <button
+              type="button"
+              [disabled]="currentPage() === queuePage.totalPages"
+              [attr.aria-label]="copy().queue.nextPage"
+              (click)="goToPage(currentPage() + 1)"
+            >
+              <span class="material-symbols-outlined" aria-hidden="true">chevron_right</span>
+            </button>
+          </nav>
+        </footer>
+      </div>
+    }
+  }
+</section>

@@ -1,0 +1,95 @@
+<!-- Admitted State -->
+@if (status() === 'Admitted') {
+    <div class="bg-surface-container-lowest border border-[#065F46]/30 rounded-lg p-6 shadow-sm mb-6">
+        <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-full bg-[#D1FAE5] flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-[#065F46] text-3xl" style="font-variation-settings: 'FILL' 1;">task_alt</span>
+            </div>
+            <div class="flex-1">
+                <h3 class="font-headline-lg text-[#065F46] font-bold mb-2">Congratulations! You've been Admitted</h3>
+                <p class="font-body-md text-on-surface-variant mb-4">
+                    We are thrilled to offer you a position in the {{ trackName() }} track at {{ branchName() }}. 
+                    Your hard work throughout the assessment process has paid off.
+                </p>
+                <div class="bg-surface p-4 rounded border border-outline-variant/50">
+                    <h4 class="font-label-md text-on-background mb-2">Next Steps:</h4>
+                    <ul class="list-disc list-inside font-body-sm text-on-surface-variant space-y-1">
+                        <li>Review and complete your Enrollment Checklist.</li>
+                        <li>Submit your original documents to the branch within 5 working days.</li>
+                    </ul>
+                </div>
+                <div class="mt-4 flex justify-end">
+                    <button [routerLink]="['/applications', applicationId(), 'enrollment']" 
+                            class="bg-[#1E3A5F] text-white px-4 py-2 rounded font-label-md hover:bg-opacity-90 transition-opacity">
+                        View Enrollment Checklist
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+    
+<!-- Waitlisted State -->
+@if (status() === 'Waitlisted') {
+<div class="bg-surface-container-lowest border border-[#B7791F]/50 rounded-lg p-6 shadow-sm mb-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-outline-variant/30 pb-4 mb-4 gap-4">
+        <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-[#B7791F] text-3xl">hourglass_empty</span>
+            <h3 class="font-headline-lg text-on-background font-bold">Status: On the Waitlist</h3>
+        </div>
+    </div>
+    
+    <div class="text-center my-6">
+        <p class="font-body-lg text-on-background">
+            You are currently <span class="font-bold">#{{ waitlistPosition() }}</span> on the waitlist for the 
+            <span class="font-bold">{{ trackName() }}</span> track at <span class="font-bold">{{ branchName() }}</span>.
+        </p>
+    </div>
+
+    <div class="bg-surface p-4 rounded border border-outline-variant/50 flex gap-3 mb-6">
+        <span class="material-symbols-outlined text-outline">info</span>
+        <p class="font-body-sm text-on-surface-variant">
+            If accepted candidates decline their offers, seats will be offered to waitlisted candidates in order. 
+            You will be notified immediately via email if a seat becomes available.
+        </p>
+    </div>
+
+    <div class="flex flex-wrap justify-end gap-3">
+        <!-- Bound to the withdraw function and disabled while processing -->
+        <button 
+            (click)="withdrawApplication()"
+            [disabled]="store.isWithdrawing()"
+            class="text-error border border-transparent hover:bg-error-container px-4 py-2 rounded font-label-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+            
+            @if (store.isWithdrawing()) {
+                <span class="material-symbols-outlined text-[18px] animate-spin">sync</span>
+                Withdrawing...
+            } @else {
+                Withdraw Application
+            }
+        </button>
+    </div>
+</div>
+}
+
+<!-- Not Selected State -->
+@if (status() === 'NotSelected') {
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 shadow-sm mb-6">
+    <div class="flex items-start gap-4">
+        <div class="w-12 h-12 rounded-full bg-surface-container-highest flex items-center justify-center shrink-0">
+            <span class="material-symbols-outlined text-on-surface-variant text-3xl">mail</span>
+        </div>
+        <div>
+            <h3 class="font-headline-lg text-on-background font-bold mb-2">Admission Decision</h3>
+            <p class="font-body-md text-on-surface-variant mb-4">
+                Thank you for taking the time to apply and participate in the assessment process. 
+                After careful consideration, we are unable to offer you a position in the current intake.
+            </p>
+            <p class="font-body-sm text-outline">
+                The selection process was highly competitive this year. We encourage you to continue developing your skills 
+                and welcome you to apply again in future cycles.
+            </p>
+        </div>
+    </div>
+</div>
+}

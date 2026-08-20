@@ -1,0 +1,204 @@
+:host {
+  display: block;
+  min-height: 100dvh;
+}
+
+.public-shell {
+  display: grid;
+  min-height: 100dvh;
+  grid-template-rows: auto 1fr auto;
+  background:
+    radial-gradient(circle at 15% 8%, rgb(208 225 251 / 55%), transparent 26rem),
+    #f7f9fb;
+}
+
+.public-shell__header,
+.public-shell__footer {
+  display: flex;
+  width: min(100% - 2rem, 75rem);
+  margin-inline: auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.public-shell__header {
+  min-height: 5.25rem;
+  padding-block: 1rem;
+}
+
+.brand {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.75rem;
+  color: #022448;
+  text-decoration: none;
+}
+
+.brand__mark {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  border-radius: 0.5rem;
+  background: #022448;
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.brand strong,
+.brand small {
+  display: block;
+}
+
+.brand strong {
+  font-size: 1rem;
+}
+
+.brand small {
+  margin-block-start: 0.125rem;
+  color: #505f76;
+  font-size: 0.75rem;
+}
+
+.public-shell__actions,
+.public-shell__actions nav {
+  display: flex;
+  align-items: center;
+}
+
+.public-shell__actions {
+  gap: 0.85rem;
+}
+
+.public-shell__actions nav {
+  gap: 0.2rem;
+  border: 1px solid rgb(196 198 207 / 75%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 72%);
+  padding: 0.2rem;
+}
+
+.public-shell__actions nav a {
+  border-radius: 999px;
+  padding: 0.55rem 0.85rem;
+  color: #53627a;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.public-shell__actions nav a:hover,
+.public-shell__actions nav a.is-active {
+  background: #eaf2fa;
+  color: #022448;
+}
+
+.public-shell__actions nav a:focus-visible,
+.language-button:focus-visible {
+  outline: 3px solid rgb(30 58 95 / 20%);
+  outline-offset: 2px;
+}
+
+.language-button {
+  display: inline-flex;
+  min-height: 2.5rem;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid #c4c6cf;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 78%);
+  padding-inline: 0.875rem;
+  color: #022448;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.language-button .material-symbols-outlined {
+  font-size: 1.15rem;
+}
+
+.public-shell__content {
+  display: grid;
+  width: min(100% - 2rem, 75rem);
+  margin-inline: auto;
+  align-items: center;
+  padding-block: 1.5rem 3rem;
+}
+
+.public-shell__footer {
+  border-block-start: 1px solid #e0e2e5;
+  padding-block: 1.25rem;
+  color: #505f76;
+  font-size: 0.75rem;
+}
+
+.public-shell__footer nav {
+  display: flex;
+  gap: 1rem;
+}
+
+.public-shell__footer a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.public-shell__footer a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 48rem) {
+  .public-shell__header {
+    align-items: flex-start;
+  }
+
+  .public-shell__actions {
+    align-items: flex-end;
+    flex-direction: column-reverse;
+  }
+}
+
+@media (max-width: 40rem) {
+  .brand small,
+  .public-shell__actions nav a:first-child {
+    display: none;
+  }
+
+  .public-shell__actions {
+    flex-direction: row;
+  }
+
+  .public-shell__actions nav {
+    border: 0;
+    background: transparent;
+    padding: 0;
+  }
+
+  .public-shell__actions nav a {
+    border: 1px solid #c4c6cf;
+    background: rgb(255 255 255 / 78%);
+  }
+
+  .language-button {
+    padding-inline: 0.7rem;
+  }
+
+  .public-shell__footer {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-shell__actions nav a {
+    transition: none;
+  }
+}

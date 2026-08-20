@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>783e8fd6-81da-41d4-8c7a-340b947b33e4</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EduFlowAI.Admission\EduFlowAI.Admission.csproj" />
+    <ProjectReference Include="..\EduFlowAI.Documents\EduFlowAI.Documents.csproj" />
+    <ProjectReference Include="..\EduFlowAI.Identity\EduFlowAI.Identity.csproj" />
+    <ProjectReference Include="..\EduFlowAI.Shared.Kernel\EduFlowAI.Shared.Kernel.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="EduFlowAI.AI.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" Version="4.0.100.8" />
+    <PackageReference Include="AWSSDK.S3" Version="4.0.102.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.10" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
+    <PackageReference Include="Pgvector" Version="0.3.2" />
+    <PackageReference Include="Pgvector.EntityFrameworkCore" Version="0.3.0" />
+    <PackageReference Include="itext" Version="9.7.0" />
+    <PackageReference Include="WolverineFx" Version="6.20.0" />
+  </ItemGroup>
+
+</Project>

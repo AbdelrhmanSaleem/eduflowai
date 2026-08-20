@@ -1,0 +1,396 @@
+<section class="management-page" [attr.dir]="copy.isRtl() ? 'rtl' : 'ltr'">
+  <!-- Page Header -->
+  <header class="management-header">
+    <div>
+      <h1>{{ copy.text('Programs', 'البرامج') }}</h1>
+      <p>
+        {{
+          copy.text(
+            'Configure program identity, institution, and duration.',
+            'حدد بيانات البرنامج والمؤسسة والمدة.'
+          )
+        }}
+      </p>
+    </div>
+    <div class="flex items-center gap-3">
+      <button
+        type="button"
+        (click)="loadData()"
+        [disabled]="loading()"
+        class="inline-flex items-center gap-1.5 rounded-card border border-outline-variant bg-white px-3.5 py-2 text-label-md text-secondary shadow-sm transition-colors hover:bg-surface-container-low disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        <span class="material-symbols-outlined text-base" aria-hidden="true">refresh</span>
+        {{ copy.text('Refresh', 'تحديث') }}
+      </button>
+      <button
+        type="button"
+        (click)="openDrawer()"
+        [disabled]="institutions().length === 0"
+        class="inline-flex items-center gap-1.5 rounded-card bg-primary px-4 py-2 text-label-md text-on-primary shadow-sm transition-colors hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        <span class="material-symbols-outlined text-base" aria-hidden="true">add</span>
+        {{ copy.text('Add Program', 'إضافة برنامج') }}
+      </button>
+    </div>
+  </header>
+
+  <!-- Success Message -->
+  @if (success()) {
+    <div
+      class="mb-4 flex items-center gap-2 rounded-card border border-success-container bg-success-container/40 px-4 py-3 text-body-sm text-success"
+      role="status"
+    >
+      <span class="material-symbols-outlined text-lg" aria-hidden="true">check_circle</span>
+      {{ success() }}
+    </div>
+  }
+
+  <!-- Error Message -->
+  @if (error()) {
+    <div
+      class="mb-4 flex items-center gap-2 rounded-card border border-error-container bg-error-container/40 px-4 py-3 text-body-sm text-error"
+      role="alert"
+    >
+      <span class="material-symbols-outlined text-lg" aria-hidden="true">error</span>
+      {{ error() }}
+    </div>
+  }
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="overflow-hidden rounded-panel border border-outline-variant bg-white shadow-card">
+      <div class="h-1 w-full overflow-hidden bg-surface-container">
+        <div class="h-full w-1/3 animate-pulse rounded-full bg-primary/40"></div>
+      </div>
+      <div class="flex items-center justify-center py-20">
+        <div class="flex flex-col items-center gap-3 text-on-surface-variant">
+          <span class="material-symbols-outlined animate-spin text-3xl" aria-hidden="true"
+            >progress_activity</span
+          >
+          <span class="text-body-sm">{{
+            copy.text('Loading programs…', 'جارٍ تحميل البرامج…')
+          }}</span>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <!-- Data Table Card -->
+    <div class="overflow-hidden rounded-panel border border-outline-variant bg-white shadow-card">
+      <!-- Table Toolbar -->
+      <div
+        class="flex flex-col gap-3 border-b border-outline-variant px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div class="flex items-center gap-2">
+          <h2 class="text-label-md text-on-surface">
+            {{ copy.text('All Programs', 'جميع البرامج') }}
+          </h2>
+          <span
+            class="inline-flex items-center rounded-full bg-secondary-container/50 px-2.5 py-0.5 text-label-sm text-on-secondary-container"
+          >
+            {{ filteredPrograms().length }}
+          </span>
+        </div>
+        <div class="relative w-full max-w-xs">
+          <span
+            class="material-symbols-outlined pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-lg text-outline"
+            aria-hidden="true"
+            >search</span
+          >
+          <input
+            type="text"
+            [placeholder]="
+              copy.text('Search by name, code, or institution…', 'ابحث بالاسم أو الكود أو المؤسسة…')
+            "
+            [value]="searchQuery()"
+            (input)="onSearch($event)"
+            class="w-full rounded-card border border-outline-variant bg-surface py-2 pe-3 ps-9 text-body-sm text-on-surface placeholder:text-outline outline-none transition-shadow focus:border-primary focus:ring-2 focus:ring-primary/15"
+          />
+        </div>
+      </div>
+
+      <!-- Table -->
+      @if (filteredPrograms().length > 0) {
+        <div class="overflow-x-auto">
+          <table class="w-full text-start">
+            <thead>
+              <tr class="border-b border-outline-variant bg-surface-container-low/50">
+                <th
+                  class="px-5 py-3 text-start text-label-sm uppercase tracking-wider text-on-surface-variant"
+                >
+                  {{ copy.text('Name', 'الاسم') }}
+                </th>
+                <th
+                  class="px-5 py-3 text-start text-label-sm uppercase tracking-wider text-on-surface-variant"
+                >
+                  {{ copy.text('Code', 'الكود') }}
+                </th>
+                <th
+                  class="px-5 py-3 text-start text-label-sm uppercase tracking-wider text-on-surface-variant"
+                >
+                  {{ copy.text('Institution', 'المؤسسة') }}
+                </th>
+                <th
+                  class="px-5 py-3 text-start text-label-sm uppercase tracking-wider text-on-surface-variant"
+                >
+                  {{ copy.text('Duration', 'المدة') }}
+                </th>
+                <th
+                  class="px-5 py-3 text-start text-label-sm uppercase tracking-wider text-on-surface-variant"
+                >
+                  {{ copy.text('Tracks', 'المسارات') }}
+                </th>
+                <th
+                  class="px-5 py-3 text-end text-label-sm uppercase tracking-wider text-on-surface-variant"
+                >
+                  {{ copy.text('Actions', 'إجراءات') }}
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant/50">
+              @for (program of filteredPrograms(); track program.id) {
+                <tr class="transition-colors hover:bg-surface-container-low/30">
+                  <td class="px-5 py-3.5">
+                    <span class="text-body-sm font-semibold text-on-surface">{{
+                      program.name
+                    }}</span>
+                  </td>
+                  <td class="px-5 py-3.5">
+                    <span
+                      class="inline-flex items-center rounded-full bg-surface-container px-2.5 py-0.5 text-label-sm font-mono text-on-surface-variant"
+                    >
+                      {{ program.code }}
+                    </span>
+                  </td>
+                  <td class="px-5 py-3.5 text-body-sm text-on-surface-variant">
+                    {{ program.institutionName }}
+                  </td>
+                  <td class="px-5 py-3.5 text-body-sm text-on-surface-variant">
+                    {{ program.durationMonths }} {{ copy.text('months', 'شهرًا') }}
+                  </td>
+                  <td class="px-5 py-3.5">
+                    <span
+                      class="inline-flex items-center rounded-full bg-secondary-container/50 px-2.5 py-0.5 text-label-sm text-on-secondary-container"
+                    >
+                      {{ program.trackCount }}
+                    </span>
+                  </td>
+                  <td class="px-5 py-3.5 text-end">
+                    <div class="inline-flex items-center gap-1">
+                      <button
+                        type="button"
+                        (click)="openDrawer(program)"
+                        [disabled]="busy()"
+                        class="inline-flex items-center gap-1 rounded-card px-2.5 py-1.5 text-label-sm text-primary transition-colors hover:bg-primary/5 disabled:opacity-50"
+                      >
+                        <span class="material-symbols-outlined text-base" aria-hidden="true">edit</span>
+                        {{ copy.text('Edit', 'تعديل') }}
+                      </button>
+                      <button
+                        type="button"
+                        (click)="deleteProgram(program)"
+                        [disabled]="busy()"
+                        class="inline-flex items-center gap-1 rounded-card px-2.5 py-1.5 text-label-sm text-error transition-colors hover:bg-error/5 disabled:opacity-50"
+                      >
+                        <span class="material-symbols-outlined text-base" aria-hidden="true">delete</span>
+                        {{ copy.text('Delete', 'حذف') }}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <!-- Empty State -->
+        <div class="flex flex-col items-center justify-center py-16 text-center">
+          <div
+            class="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-surface-container"
+          >
+            <span class="material-symbols-outlined text-2xl text-outline" aria-hidden="true"
+              >school</span
+            >
+          </div>
+          <p class="text-body-sm font-medium text-on-surface-variant">
+            @if (searchQuery()) {
+              {{ copy.text('No programs match your search.', 'لا توجد برامج تطابق بحثك.') }}
+            } @else {
+              {{ copy.text('No programs configured yet.', 'لم تتم إضافة برامج بعد.') }}
+            }
+          </p>
+          @if (!searchQuery() && institutions().length > 0) {
+            <p class="mt-1 max-w-sm text-body-sm text-outline">
+              {{
+                copy.text('Get started by adding your first program.', 'ابدأ بإضافة أول برنامج.')
+              }}
+            </p>
+            <button
+              type="button"
+              (click)="openDrawer()"
+              class="mt-4 inline-flex items-center gap-1.5 rounded-card bg-primary px-4 py-2 text-label-md text-on-primary shadow-sm transition-colors hover:bg-primary-container"
+            >
+              <span class="material-symbols-outlined text-base" aria-hidden="true">add</span>
+              {{ copy.text('Add Program', 'إضافة برنامج') }}
+            </button>
+          }
+          @if (institutions().length === 0 && !searchQuery()) {
+            <p class="mt-1 max-w-sm text-body-sm text-outline">
+              {{
+                copy.text(
+                  'Add an institution first before creating programs.',
+                  'أضف مؤسسة أولاً قبل إنشاء البرامج.'
+                )
+              }}
+            </p>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Slide-over Drawer -->
+  @if (drawerOpen()) {
+    <!-- Backdrop -->
+    <div
+      class="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm transition-opacity"
+      (click)="closeDrawer()"
+      aria-hidden="true"
+    ></div>
+
+    <!-- Drawer Panel -->
+    <aside
+      class="fixed inset-y-0 z-50 flex w-full max-w-md flex-col bg-white shadow-2xl ltr:right-0 rtl:left-0"
+      role="dialog"
+      [attr.aria-label]="
+        editingProgram()
+          ? copy.text('Edit Program', 'تعديل البرنامج')
+          : copy.text('Add Program', 'إضافة برنامج')
+      "
+    >
+      <!-- Drawer Header -->
+      <header class="flex items-center justify-between border-b border-outline-variant px-6 py-4">
+        <div>
+          <h2 class="text-headline-md text-on-surface">
+            {{
+              editingProgram()
+                ? copy.text('Edit Program', 'تعديل البرنامج')
+                : copy.text('Add Program', 'إضافة برنامج')
+            }}
+          </h2>
+          <p class="mt-0.5 text-body-sm text-on-surface-variant">
+            {{ copy.text('Fill in the program details below.', 'أدخل بيانات البرنامج أدناه.') }}
+          </p>
+        </div>
+        <button
+          type="button"
+          (click)="closeDrawer()"
+          class="flex h-9 w-9 items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-surface-container"
+        >
+          <span class="material-symbols-outlined" aria-hidden="true">close</span>
+        </button>
+      </header>
+
+      <!-- Drawer Body -->
+      <form
+        [formGroup]="programForm"
+        (ngSubmit)="saveProgram()"
+        class="flex flex-1 flex-col overflow-y-auto"
+      >
+        <div class="flex-1 space-y-5 px-6 py-5">
+          <!-- Institution Select -->
+          <div class="space-y-1.5">
+            <label
+              for="drawer-program-institution"
+              class="block text-label-md text-on-surface-variant"
+            >
+              {{ copy.text('Institution', 'المؤسسة') }}
+            </label>
+            <select
+              id="drawer-program-institution"
+              formControlName="institutionId"
+              class="w-full rounded-card border border-outline-variant bg-white px-3.5 py-2.5 text-body-sm text-on-surface outline-none transition-shadow focus:border-primary focus:ring-2 focus:ring-primary/15"
+            >
+              <option value="">{{ copy.text('Select institution', 'اختر المؤسسة') }}</option>
+              @for (institution of institutions(); track institution.id) {
+                <option [value]="institution.id">{{ institution.name }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Name Field -->
+          <div class="space-y-1.5">
+            <label for="drawer-program-name" class="block text-label-md text-on-surface-variant">
+              {{ copy.text('Program Name', 'اسم البرنامج') }}
+            </label>
+            <input
+              id="drawer-program-name"
+              formControlName="name"
+              maxlength="200"
+              [placeholder]="
+                copy.text(
+                  'e.g. 9-Month Professional Training Program',
+                  'مثال: برنامج التدريب الاحترافي لمدة 9 أشهر'
+                )
+              "
+              class="w-full rounded-card border border-outline-variant bg-white px-3.5 py-2.5 text-body-sm text-on-surface placeholder:text-outline outline-none transition-shadow focus:border-primary focus:ring-2 focus:ring-primary/15"
+            />
+          </div>
+
+          <!-- Code Field -->
+          <div class="space-y-1.5">
+            <label for="drawer-program-code" class="block text-label-md text-on-surface-variant">
+              {{ copy.text('Code', 'الكود') }}
+            </label>
+            <input
+              id="drawer-program-code"
+              formControlName="code"
+              maxlength="30"
+              [placeholder]="copy.text('e.g. PWD', 'مثال: PWD')"
+              class="w-full rounded-card border border-outline-variant bg-white px-3.5 py-2.5 text-body-sm text-on-surface placeholder:text-outline outline-none transition-shadow focus:border-primary focus:ring-2 focus:ring-primary/15 font-mono uppercase"
+            />
+          </div>
+
+          <!-- Duration Field -->
+          <div class="space-y-1.5">
+            <label
+              for="drawer-program-duration"
+              class="block text-label-md text-on-surface-variant"
+            >
+              {{ copy.text('Duration (months)', 'المدة (بالشهور)') }}
+            </label>
+            <input
+              id="drawer-program-duration"
+              type="number"
+              min="1"
+              max="60"
+              formControlName="durationMonths"
+              class="w-full rounded-card border border-outline-variant bg-white px-3.5 py-2.5 text-body-sm text-on-surface outline-none transition-shadow focus:border-primary focus:ring-2 focus:ring-primary/15"
+            />
+            <p class="text-label-sm text-outline">
+              {{ copy.text('Between 1 and 60 months.', 'بين 1 و60 شهرًا.') }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Drawer Footer -->
+        <div class="flex items-center justify-end gap-3 border-t border-outline-variant px-6 py-4">
+          <button
+            type="button"
+            (click)="closeDrawer()"
+            class="inline-flex items-center rounded-card border border-outline-variant bg-white px-4 py-2 text-label-md text-secondary transition-colors hover:bg-surface-container-low"
+          >
+            {{ copy.text('Cancel', 'إلغاء') }}
+          </button>
+          <button
+            type="submit"
+            [disabled]="busy()"
+            class="inline-flex items-center gap-1.5 rounded-card bg-primary px-4 py-2 text-label-md text-on-primary shadow-sm transition-colors hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <span class="material-symbols-outlined text-base" aria-hidden="true">save</span>
+            {{ editingProgram() ? copy.text('Update', 'تحديث') : copy.text('Save', 'حفظ') }}
+          </button>
+        </div>
+      </form>
+    </aside>
+  }
+</section>

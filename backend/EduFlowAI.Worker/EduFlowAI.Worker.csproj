@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-EduFlowAI.Worker-1ac4bf23-feb9-40d8-89a6-72686af4670c</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MailKit" Version="4.17.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.8" />
+    <PackageReference Include="MimeKit" Version="4.17.0" />
+    <PackageReference Include="Serilog.Extensions.Hosting" Version="10.0.0" />
+    <PackageReference Include="Serilog.Settings.Configuration" Version="10.0.1" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.10" />
+    <PackageReference Include="WolverineFx" Version="6.20.0" />
+    <PackageReference Include="WolverineFx.EntityFrameworkCore" Version="6.20.0" />
+    <PackageReference Include="WolverineFx.Postgresql" Version="6.20.0" />
+    <PackageReference Include="WolverineFx.RabbitMQ" Version="6.20.0" />
+    <PackageReference Include="WolverineFx.RuntimeCompilation" Version="6.20.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EduFlowAI.Admission\EduFlowAI.Admission.csproj" />
+    <ProjectReference Include="..\EduFlowAI.AI\EduFlowAI.AI.csproj" />
+    <ProjectReference Include="..\EduFlowAI.Communication\EduFlowAI.Communication.csproj" />
+    <ProjectReference Include="..\EduFlowAI.Documents\EduFlowAI.Documents.csproj" />
+    <ProjectReference Include="..\EduFlowAI.Identity\EduFlowAI.Identity.csproj" />
+    <ProjectReference Include="..\EduFlowAI.Persistence\EduFlowAI.Persistence.csproj" />
+    <ProjectReference Include="..\EduFlowAI.Shared.Messaging.Contracts\EduFlowAI.Shared.Messaging.Contracts.csproj" />
+  </ItemGroup>
+</Project>

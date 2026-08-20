@@ -1,0 +1,202 @@
+<section class="management-page" [attr.dir]="copy.isRtl() ? 'rtl' : 'ltr'">
+  <header class="management-header">
+    <div>
+      <h1>{{ copy.text('Tracks & branches', 'المسارات والفروع') }}</h1>
+      <p>
+        {{
+          copy.text(
+            'Maintain the reusable catalog. Cycle offerings decide which active tracks and branches are public.',
+            'أدر الكتالوج الأساسي، بينما تحدد عروض الدورة المسارات والفروع الظاهرة للمتقدمين.'
+          )
+        }}
+      </p>
+    </div>
+    <button class="secondary-button" type="button" (click)="load()" [disabled]="loading() || busy()">
+      <span class="material-symbols-outlined" aria-hidden="true">refresh</span>
+      {{ copy.text('Refresh', 'تحديث') }}
+    </button>
+  </header>
+
+  <nav class="page-tabs" [attr.aria-label]="copy.text('Admission administration', 'إدارة القبول')">
+    <a routerLink="/admin/admission" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">
+      {{ copy.text('Overview', 'نظرة عامة') }}
+    </a>
+    <a routerLink="/admin/admission/programs" routerLinkActive="is-active">
+      {{ copy.text('Programs', 'البرامج') }}
+    </a>
+    <a routerLink="/admin/admission/catalog" routerLinkActive="is-active">
+      {{ copy.text('Tracks & branches', 'المسارات والفروع') }}
+    </a>
+    <a routerLink="/admin/admission/cycles" routerLinkActive="is-active">
+      {{ copy.text('Cycles', 'الدورات') }}
+    </a>
+  </nav>
+
+  @if (loading()) {
+    <div class="loading-line" role="status"></div>
+  }
+  @if (error()) {
+    <div class="message message--error" role="alert">
+      <span class="material-symbols-outlined" aria-hidden="true">error</span>
+      {{ error() }}
+    </div>
+  }
+  @if (success()) {
+    <div class="message message--success" role="status">
+      <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
+      {{ success() }}
+    </div>
+  }
+
+  <div class="management-grid management-grid--equal">
+    <section class="panel">
+      <div class="panel-heading">
+        <div>
+          <h2>{{ copy.text('Track management', 'إدارة المسارات') }}</h2>
+          <p>{{ copy.text('Program, description, recommendation topics and active state.', 'البرنامج والوصف وموضوعات الترشيح وحالة التفعيل.') }}</p>
+        </div>
+        <span class="count-badge">{{ tracks().length }}</span>
+      </div>
+
+      <form [formGroup]="trackForm" (ngSubmit)="saveTrack()">
+        <div class="form-grid">
+          <div class="field span-2">
+            <label for="track-program">{{ copy.text('Program', 'البرنامج') }}</label>
+            <select id="track-program" formControlName="programId" [disabled]="!!editingTrackId()">
+              <option value="">{{ copy.text('Select program', 'اختر البرنامج') }}</option>
+              @for (program of programs(); track program.id) {
+                <option [value]="program.id">{{ program.name }}</option>
+              }
+            </select>
+            @if (editingTrackId()) {
+              <small>{{ copy.text('A track cannot be moved to another program after creation.', 'لا يمكن نقل المسار إلى برنامج آخر بعد إنشائه.') }}</small>
+            }
+          </div>
+          <div class="field span-2">
+            <label for="track-name">{{ copy.text('Track name', 'اسم المسار') }}</label>
+            <input id="track-name" formControlName="name" maxlength="200" />
+          </div>
+          <div class="field span-2">
+            <label for="track-description">{{ copy.text('Description', 'الوصف') }}</label>
+            <textarea id="track-description" formControlName="description" maxlength="4000"></textarea>
+          </div>
+          <div class="field span-2">
+            <label for="track-topics">{{ copy.text('Prerequisite topics', 'الموضوعات التمهيدية') }}</label>
+            <textarea id="track-topics" formControlName="prerequisiteTopics" [placeholder]="copy.text('C#, SQL, REST APIs', 'C#، SQL، REST APIs')"></textarea>
+            <small>{{ copy.text('Separate topics with commas or new lines. Maximum 50 unique topics.', 'افصل الموضوعات بفاصلة أو سطر جديد، بحد أقصى 50 موضوعًا مختلفًا.') }}</small>
+          </div>
+          <label class="toggle-field span-2">
+            <input type="checkbox" formControlName="isActive" />
+            {{ copy.text('Track is active', 'المسار نشط') }}
+          </label>
+        </div>
+        <div class="form-actions">
+          @if (editingTrackId()) {
+            <button class="secondary-button" type="button" (click)="resetTrackForm()">
+              {{ copy.text('Cancel edit', 'إلغاء التعديل') }}
+            </button>
+          }
+          <button class="primary-button" type="submit" [disabled]="busy() || programs().length === 0">
+            <span class="material-symbols-outlined" aria-hidden="true">save</span>
+            {{ editingTrackId() ? copy.text('Update track', 'تحديث المسار') : copy.text('Add track', 'إضافة مسار') }}
+          </button>
+        </div>
+      </form>
+
+      <div class="entity-list">
+        @for (track of tracks(); track track.id) {
+          <article class="list-row" [class.list-row--selected]="editingTrackId() === track.id">
+            <div class="list-row__main">
+              <strong>{{ track.name }}</strong>
+              <small>{{ programName(track.programId) }} · {{ track.prerequisiteTopics.length }} {{ copy.text('topics', 'موضوعات') }}</small>
+              @if (track.prerequisiteTopics.length > 0) {
+                <div class="chip-row">
+                  @for (topic of track.prerequisiteTopics.slice(0, 5); track topic) {
+                    <span class="chip">{{ topic }}</span>
+                  }
+                </div>
+              }
+            </div>
+            <div class="list-row__meta">
+              <span class="status-badge" [class.status-badge--active]="track.isActive">
+                {{ track.isActive ? copy.text('Active', 'نشط') : copy.text('Inactive', 'غير نشط') }}
+              </span>
+              <button class="text-button" type="button" (click)="editTrack(track)">
+                <span class="material-symbols-outlined" aria-hidden="true">edit</span>
+                {{ copy.text('Edit', 'تعديل') }}
+              </button>
+            </div>
+          </article>
+        } @empty {
+          <div class="empty-state">
+            <span class="material-symbols-outlined" aria-hidden="true">route</span>
+            <p>{{ copy.text('No tracks are configured.', 'لم تتم إضافة مسارات بعد.') }}</p>
+          </div>
+        }
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-heading">
+        <div>
+          <h2>{{ copy.text('Branch management', 'إدارة الفروع') }}</h2>
+          <p>{{ copy.text('Maintain delivery locations used by cycle offerings.', 'أدر أماكن التنفيذ المستخدمة في عروض الدورات.') }}</p>
+        </div>
+        <span class="count-badge">{{ branches().length }}</span>
+      </div>
+
+      <form [formGroup]="branchForm" (ngSubmit)="saveBranch()">
+        <div class="form-grid">
+          <div class="field span-2">
+            <label for="branch-name">{{ copy.text('Branch name', 'اسم الفرع') }}</label>
+            <input id="branch-name" formControlName="name" maxlength="200" />
+          </div>
+          <div class="field span-2">
+            <label for="branch-governorate">{{ copy.text('Governorate', 'المحافظة') }}</label>
+            <input id="branch-governorate" formControlName="governorate" maxlength="100" />
+          </div>
+          <label class="toggle-field span-2">
+            <input type="checkbox" formControlName="isActive" />
+            {{ copy.text('Branch is active', 'الفرع نشط') }}
+          </label>
+        </div>
+        <div class="form-actions">
+          @if (editingBranchId()) {
+            <button class="secondary-button" type="button" (click)="resetBranchForm()">
+              {{ copy.text('Cancel edit', 'إلغاء التعديل') }}
+            </button>
+          }
+          <button class="primary-button" type="submit" [disabled]="busy()">
+            <span class="material-symbols-outlined" aria-hidden="true">save</span>
+            {{ editingBranchId() ? copy.text('Update branch', 'تحديث الفرع') : copy.text('Add branch', 'إضافة فرع') }}
+          </button>
+        </div>
+      </form>
+
+      <div class="entity-list">
+        @for (branch of branches(); track branch.id) {
+          <article class="list-row" [class.list-row--selected]="editingBranchId() === branch.id">
+            <div class="list-row__main">
+              <strong>{{ branch.name }}</strong>
+              <small>{{ branch.governorate || copy.text('Governorate not specified', 'المحافظة غير محددة') }}</small>
+            </div>
+            <div class="list-row__meta">
+              <span class="status-badge" [class.status-badge--active]="branch.isActive">
+                {{ branch.isActive ? copy.text('Active', 'نشط') : copy.text('Inactive', 'غير نشط') }}
+              </span>
+              <button class="text-button" type="button" (click)="editBranch(branch)">
+                <span class="material-symbols-outlined" aria-hidden="true">edit</span>
+                {{ copy.text('Edit', 'تعديل') }}
+              </button>
+            </div>
+          </article>
+        } @empty {
+          <div class="empty-state">
+            <span class="material-symbols-outlined" aria-hidden="true">apartment</span>
+            <p>{{ copy.text('No branches are configured.', 'لم تتم إضافة فروع بعد.') }}</p>
+          </div>
+        }
+      </div>
+    </section>
+  </div>
+</section>

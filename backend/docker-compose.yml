@@ -1,0 +1,15 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4-management
+    ports:
+      - "5672:5672"    # RMQ port
+      - "15672:15672"  # management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: eduflowai
+      RABBITMQ_DEFAULT_PASS: eduflowai
+
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+volumes:
+  rabbitmq_data:

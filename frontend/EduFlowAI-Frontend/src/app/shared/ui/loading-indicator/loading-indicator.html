@@ -1,0 +1,9 @@
+<div
+  class="loading"
+  [class.loading--centered]="centered()"
+  role="status"
+  aria-live="polite"
+>
+  <span class="loading__spinner" aria-hidden="true"></span>
+  <span>{{ label() }}</span>
+</div>

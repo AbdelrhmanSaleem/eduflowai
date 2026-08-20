@@ -1,0 +1,309 @@
+<div class="flex-1 flex flex-col min-h-screen relative">
+  
+  <!-- Loader -->
+  @if (store.isLoading()) {
+    <div class="flex-1 flex justify-center items-center">
+      <span class="material-symbols-outlined animate-spin text-primary text-4xl">autorenew</span>
+    </div>
+  }
+
+  @if (!store.isLoading() && store.applicationDetails()) {
+    <main class="flex-grow p-6 md:p-8 w-full space-y-8">
+      
+      <!-- Expired Banner -->
+      @if (store.isExpired() || !store.canEdit()) {
+        <div class="bg-surface-variant border-l-4 border-outline text-on-surface p-4 rounded-r-lg flex gap-4 items-start card-shadow">
+          <span class="material-symbols-outlined text-outline mt-0.5">timer_off</span>
+          <div>
+            <h3 class="font-headline-md text-headline-md text-on-surface">The admission deadline has passed</h3>
+            <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Applications are closed. You can no longer modify your track preferences.</p>
+          </div>
+        </div>
+      }
+
+      <!-- Breadcrumbs & Header (Dynamic based on mode) -->
+      <div>
+        <nav aria-label="Breadcrumb" class="flex text-body-sm text-on-surface-variant mb-4">
+          <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <li class="inline-flex items-center">
+              <a routerLink="/applications" class="hover:text-primary transition-colors">My Applications</a>
+            </li>
+            <li>
+              <div class="flex items-center">
+                <span class="material-symbols-outlined text-sm mx-1">chevron_right</span>
+                <a [routerLink]="['/applications', applicationId()]" class="hover:text-primary transition-colors">{{ store.applicationDetails()?.cycleName }}</a>
+              </div>
+            </li>
+            @if (isEditMode()) {
+              <li>
+                <div class="flex items-center">
+                  <span class="material-symbols-outlined text-sm mx-1">chevron_right</span>
+                  <span class="text-on-surface font-medium">Edit Preferences</span>
+                </div>
+              </li>
+            }
+          </ol>
+        </nav>
+        
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <!-- Dynamic Title -->
+          <h2 class="font-headline-xl text-headline-xl text-primary">
+            {{ isEditMode() ? 'Edit Track Preferences' : 'Track Preferences' }}
+          </h2>
+          @if (!store.canEdit()) {
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full border border-error text-error font-label-sm text-label-sm bg-transparent">
+              {{ store.applicationDetails()?.status }}
+            </span>
+          }
+        </div>
+      </div>
+
+      <!-- Active Deadline Banner -->
+      @if (store.canEdit()) {
+        <div class="bg-primary-container text-on-primary rounded-lg p-4 flex items-center gap-3 shadow-sm">
+          <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">event</span>
+          <div class="flex-1">
+            <p class="font-body-md text-body-md font-medium">
+              Deadline: {{ store.applicationDetails()?.cycleDeadlineUtc | date:'dd MMMM yyyy' }} 
+              <span class="opacity-80 font-normal">({{ daysRemaining() }} Days remaining)</span>
+            </p>
+          </div>
+        </div>
+      }
+
+      <!-- Form Area -->
+      <form [formGroup]="preferencesForm" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-8 space-y-6" [class.opacity-75]="!store.canEdit()">
+          
+          <!-- Preference 1 -->
+          <div formGroupName="preference1" 
+               class="bg-surface-container-lowest border rounded-xl p-6 shadow-sm relative overflow-hidden group transition-colors"
+               [ngClass]="store.canEdit() ? 'border-outline-variant hover:border-primary' : 'border-outline-variant'">
+            <div class="absolute top-0 left-0 w-1 h-full" [ngClass]="store.canEdit() ? 'bg-primary' : 'bg-surface-variant'"></div>
+            
+            <div class="flex justify-between items-start mb-6 border-b border-surface-variant pb-4">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded flex items-center justify-center" 
+                     [ngClass]="store.canEdit() ? 'bg-primary/10 text-primary' : 'bg-surface-container-high text-on-surface-variant'">
+                  <span class="font-bold text-lg">1</span>
+                </div>
+                <h3 class="font-headline-lg text-headline-lg text-on-surface">Preference 1 (Primary Choice)</h3>
+              </div>
+              @if (!store.canEdit()) { <span class="material-symbols-outlined text-outline">lock</span> }
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="space-y-2">
+                <label class="block font-label-md text-label-md text-on-surface">Select Track</label>
+                <div class="relative">
+                  <select formControlName="trackId" (change)="onTrackChange(1)"
+                          class="w-full bg-surface-container-lowest border border-outline rounded-md px-4 py-3 text-body-md text-on-surface focus:border-primary focus:ring-1 focus:ring-primary appearance-none">
+                    <option value="" disabled>Choose a track...</option>
+                    @for (track of displayTracks1(); track track.id) {
+                      <option [value]="track.id">{{ track.name }}</option>
+                    }
+                  </select>
+                  <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">expand_more</span>
+                </div>
+              </div>
+
+              <div class="space-y-2">
+                <label class="block font-label-md text-label-md text-on-surface">Preferred Branch</label>
+                <div class="relative">
+                  <select formControlName="branchId" (change)="onBranchChange(1)"
+                          class="w-full bg-surface-container-lowest border border-outline rounded-md px-4 py-3 text-body-md text-on-surface focus:border-primary focus:ring-1 focus:ring-primary appearance-none">
+                    <option value="" disabled>Choose a branch...</option>
+                    @for (branch of displayBranches1(); track branch.branchId) {
+                      <option [value]="branch.branchId">{{ branch.branchName }}</option>
+                    }
+                  </select>
+                  <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">expand_more</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Preference 2 -->
+          <div formGroupName="preference2" 
+               class="bg-surface-container-lowest border rounded-xl p-6 shadow-sm relative overflow-hidden"
+               [ngClass]="preferencesForm.errors?.['duplicatePreferences'] ? 'border-error' : 'border-outline-variant'">
+            <div class="absolute top-0 left-0 w-1 h-full" 
+                 [ngClass]="preferencesForm.errors?.['duplicatePreferences'] ? 'bg-error' : 'bg-surface-variant'"></div>
+            
+            <div class="flex justify-between items-start mb-6 border-b border-surface-variant pb-4">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded bg-surface-variant flex items-center justify-center text-on-surface-variant">
+                  <span class="font-bold text-lg">2</span>
+                </div>
+                <div>
+                  <h3 class="font-headline-lg text-headline-lg text-on-surface">Preference 2 (Backup Choice)</h3>
+                  <p class="font-label-sm text-label-sm text-on-surface-variant mt-1">Backup — used only if not selected for Preference 1</p>
+                </div>
+              </div>
+              @if (!store.canEdit()) { <span class="material-symbols-outlined text-outline">lock</span> }
+            </div>
+
+            @if (preferencesForm.errors?.['duplicatePreferences'] && store.canEdit()) {
+              <div class="mb-6 p-3 bg-error-container text-on-error-container rounded-md flex items-start gap-2 border border-error/20">
+                <span class="material-symbols-outlined text-error mt-0.5">error</span>
+                <p class="font-body-sm text-body-sm">You cannot select the exact same track and branch combination for both preferences. Please choose a different track or branch for your backup choice.</p>
+              </div>
+            }
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="space-y-2">
+                <label class="block font-label-md text-label-md text-on-surface">Select Track</label>
+                <div class="relative">
+                  <select formControlName="trackId" (change)="onTrackChange(2)"
+                          class="w-full bg-surface-container-lowest border border-outline rounded-md px-4 py-3 text-body-md text-on-surface focus:border-primary focus:ring-1 focus:ring-primary appearance-none"
+                          [class.border-error]="preferencesForm.errors?.['duplicatePreferences']">
+                    <option value="">None (Skip Backup)</option>
+                    @for (track of displayTracks2(); track track.id) {
+                      <option [value]="track.id">{{ track.name }}</option>
+                    }
+                  </select>
+                  <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none"
+                        [class.text-error]="preferencesForm.errors?.['duplicatePreferences']">expand_more</span>
+                </div>
+              </div>
+
+              <div class="space-y-2">
+                <label class="block font-label-md text-label-md text-on-surface">Preferred Branch</label>
+                <div class="relative">
+                  <select formControlName="branchId" (change)="onBranchChange(2)"
+                          class="w-full bg-surface-container-lowest border border-outline rounded-md px-4 py-3 text-body-md text-on-surface focus:border-primary focus:ring-1 focus:ring-primary appearance-none"
+                          [class.border-error]="preferencesForm.errors?.['duplicatePreferences']">
+                    <option value="" disabled>Choose a branch...</option>
+                    @for (branch of displayBranches2(); track branch.branchId) {
+                      <option [value]="branch.branchId">{{ branch.branchName }}</option>
+                    }
+                  </select>
+                  <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none"
+                        [class.text-error]="preferencesForm.errors?.['duplicatePreferences']">expand_more</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Info Sidebar Panel -->
+        <div class="lg:col-span-4 space-y-6">
+          <div class="bg-surface-container-low border border-outline-variant rounded-xl p-6 shadow-sm">
+            <div class="flex items-center gap-2 mb-4 text-primary">
+              <span class="material-symbols-outlined">lightbulb</span>
+              <h4 class="font-headline-md text-headline-md font-semibold">Guidance</h4>
+            </div>
+            <ul class="space-y-4 font-body-sm text-body-sm text-on-surface-variant">
+              <li class="flex gap-3">
+                <span class="material-symbols-outlined text-base text-primary/70 shrink-0">check_circle</span>
+                <span>Ensure your primary choice aligns closely with your academic background and career goals.</span>
+              </li>
+              <li class="flex gap-3">
+                <span class="material-symbols-outlined text-base text-primary/70 shrink-0">check_circle</span>
+                <span>Backup tracks are evaluated only after primary allocations are exhausted.</span>
+              </li>
+              <li class="flex gap-3">
+                <span class="material-symbols-outlined text-base text-primary/70 shrink-0">check_circle</span>
+                <span>Branch availability varies by track. Selecting a track or branch first will auto-filter options.</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </form>
+
+      <!-- Actions -->
+      <div class="flex justify-between items-center pt-6 border-t border-outline-variant mt-8">
+        <button type="button" (click)="goBack()" 
+                class="px-6 py-2.5 border border-outline text-on-surface hover:bg-surface-container-low rounded-md font-label-md text-label-md transition-colors">
+          Back
+        </button>
+        
+        <div class="flex gap-3 items-center">
+          <!-- View Prerequisites Button -->
+          @if (prerequisitesList().length > 0) {
+            <button type="button" (click)="openPrerequisitesModal()"
+                    class="px-4 py-2.5 text-secondary hover:bg-secondary-container/30 rounded-md font-label-md text-label-md transition-colors flex items-center gap-2">
+              <span class="material-symbols-outlined text-[18px]">menu_book</span>
+              View Prerequisites
+            </button>
+          }
+
+          @if (store.canEdit()) {
+            <!-- Dynamic Button Text -->
+            <button type="button" (click)="savePreferences()"
+                    [disabled]="preferencesForm.invalid || !preferencesForm.dirty || store.isLoading()"
+                    class="px-6 py-2.5 border border-primary text-primary hover:bg-primary/5 rounded-md font-label-md text-label-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              {{ isEditMode() ? 'Save Changes' : 'Save Draft' }}
+            </button>
+            
+            <button type="button" (click)="submitApplication()"
+                    [disabled]="preferencesForm.invalid || preferencesForm.dirty || store.isLoading()"
+                    class="px-6 py-2.5 bg-primary text-on-primary hover:bg-primary/90 rounded-md font-label-md text-label-md transition-colors shadow-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+              Submit Application
+              <span class="material-symbols-outlined text-sm">send</span>
+            </button>
+          } @else {
+            <button type="button" disabled
+                    class="bg-surface-container-high text-outline font-label-md text-label-md px-6 py-2.5 rounded-lg cursor-not-allowed flex items-center gap-2">
+              <span class="material-symbols-outlined text-[18px]">lock</span>
+              Preferences Locked
+            </button>
+          }
+        </div>
+      </div>
+    </main>
+  }
+
+  <!-- Prerequisites Custom Modal Overlay -->
+  @if (showPrerequisitesModal()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" (click)="closePrerequisitesModal()">
+      <div class="bg-surface border border-outline-variant rounded-xl shadow-lg max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200" (click)="$event.stopPropagation()">
+        
+        <div class="px-6 py-4 border-b border-outline-variant flex justify-between items-center bg-surface-container-lowest">
+          <div class="flex items-center gap-2 text-primary">
+            <span class="material-symbols-outlined text-2xl">menu_book</span>
+            <h3 class="font-headline-md text-headline-md font-bold">Track Prerequisites</h3>
+          </div>
+          <button (click)="closePrerequisitesModal()" class="text-on-surface-variant hover:bg-surface-container-high p-1.5 rounded-full transition-colors">
+            <span class="material-symbols-outlined text-[20px]">close</span>
+          </button>
+        </div>
+
+        <div class="px-6 py-5 overflow-y-auto">
+          <p class="text-body-sm text-on-surface-variant mb-6">
+            Review the required foundational knowledge for your selected tracks. Make sure you are familiar with these topics before proceeding to the technical exams.
+          </p>
+
+          <div class="space-y-6">
+            @for (item of prerequisitesList(); track item.trackName) {
+              <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-5">
+                <h4 class="font-title-md text-title-md text-on-surface mb-3 border-b border-outline-variant/50 pb-2">
+                  {{ item.trackName }}
+                </h4>
+                
+                @if (item.topics && item.topics.length > 0) {
+                  <ul class="grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-4">
+                    @for (topic of item.topics; track topic) {
+                      <li class="flex items-start gap-2 text-body-sm text-on-surface-variant">
+                        <span class="material-symbols-outlined text-[16px] text-primary mt-0.5 shrink-0">fiber_manual_record</span>
+                        <span>{{ topic }}</span>
+                      </li>
+                    }
+                  </ul>
+                } @else {
+                  <p class="text-body-sm text-outline italic">No specific prerequisites listed for this track.</p>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="px-6 py-4 border-t border-outline-variant bg-surface-container-lowest flex justify-end">
+          <button (click)="closePrerequisitesModal()" class="px-5 py-2 bg-primary text-on-primary rounded-md font-label-md hover:bg-primary/90 transition-colors">
+            Got it
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

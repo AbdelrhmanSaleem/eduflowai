@@ -1,0 +1,120 @@
+<div class="flex flex-col min-h-full">
+  <!-- Page Header Area -->
+  <div class="bg-surface-container-lowest border-b border-outline-variant px-6 md:px-margin-page py-8">
+    <div class="max-w-container-max mx-auto">
+      <!-- Breadcrumbs -->
+      <nav class="flex items-center text-label-sm font-label-sm text-secondary mb-4 gap-2">
+        <a routerLink="/my-applications" class="hover:text-primary transition-colors">My Applications</a>
+        <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+        <span class="text-on-surface font-semibold">Create</span>
+      </nav>
+      <h1 class="text-headline-xl font-headline-xl text-on-surface mb-2">Start New Application</h1>
+      <p class="text-body-md font-body-md text-on-surface-variant max-w-2xl">
+        Choose which program you'd like to apply to.
+      </p>
+    </div>
+  </div>
+
+  <!-- Canvas Content -->
+  <div class="flex-1 px-6 md:px-margin-page py-8 overflow-y-auto">
+    <div class="max-w-container-max mx-auto h-full flex flex-col">
+      
+      <!-- Loading State -->
+      @if (store.isLoading() && !store.activeCycles().length) {
+        <div class="flex items-center justify-center py-12">
+          <span class="text-secondary font-body-md">Loading available programs...</span>
+        </div>
+      }
+
+      <!-- Programs Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 flex-1 items-start">
+        
+        <!-- Loop over the active cycles but display Program information -->
+        @for (cycle of store.activeCycles(); track cycle.cycleId) {
+          <div 
+            (click)="selectCycle(cycle.cycleId)"
+            [ngClass]="{
+              'bg-secondary-container/20 border-2 border-primary': selectedCycleId() === cycle.cycleId,
+              'bg-surface-container-lowest border border-outline-variant hover:border-primary': selectedCycleId() !== cycle.cycleId
+            }"
+            class="relative rounded-xl p-6 cursor-pointer hover:shadow-md transition-all group h-full flex flex-col">
+            
+            <!-- Checkmark for selected item -->
+            @if (selectedCycleId() === cycle.cycleId) {
+              <div class="absolute top-4 right-4 bg-primary text-on-primary rounded-full p-1 shadow-sm flex items-center justify-center">
+                <span class="material-symbols-outlined text-[16px] font-bold">check</span>
+              </div>
+            }
+
+            <!-- Display Program Name instead of Cycle Label -->
+            <h3 class="text-headline-md font-headline-md text-on-surface mb-3" [class.pr-8]="selectedCycleId() === cycle.cycleId">
+              {{ cycle.programName }}
+            </h3>
+            
+            <!-- Display Program Description -->
+            <p class="text-body-sm font-body-sm text-on-surface-variant mb-6 flex-1 whitespace-pre-line">
+              {{ cycle.programDescription }}
+            </p>
+
+            <div class="mt-auto space-y-4">
+              <div class="flex items-center gap-2 text-label-md font-label-md text-on-surface">
+                <span class="material-symbols-outlined text-secondary text-[18px]">calendar_today</span>
+                Start Date: <span class="font-normal text-on-surface-variant">{{ cycle.startDate | date:'mediumDate' }}</span>
+              </div>
+              <div class="inline-flex items-center px-3 py-1 bg-primary text-on-primary text-label-sm font-label-sm rounded-full w-fit">
+                Deadline: {{ cycle.deadlineUtc | date:'mediumDate' }}
+              </div>
+            </div>
+          </div>
+        } @empty {
+          <!-- Empty State: Displayed automatically when the activeCycles array is empty -->
+          <div class="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col items-center justify-center py-16 text-center animate-in fade-in duration-500">
+            <div class="w-24 h-24 bg-surface-container rounded-full flex items-center justify-center mb-6 border border-outline-variant/50">
+              <span class="material-symbols-outlined text-5xl text-primary/60" style="font-variation-settings: 'FILL' 0;">event_busy</span>
+            </div>
+            <h3 class="font-headline-lg text-headline-lg text-on-surface mb-2">No Programs Available</h3>
+            <p class="font-body-md text-body-md text-on-surface-variant max-w-md mx-auto">
+              There are currently no active admission cycles or programs open for new applications. Please check back later.
+            </p>
+          </div>
+        }
+      </div>
+
+      <!-- Footer Actions -->
+      <div class="mt-12 pt-6 border-t border-outline-variant flex flex-col sm:flex-row items-center justify-end gap-4">
+        
+        <!-- API Error Display -->
+        <!-- @if (store.error()) {
+          <div class="w-full sm:mr-auto sm:w-auto p-3 bg-error-container text-on-error-container rounded-md flex items-start gap-2 border border-error/20">
+            <span class="material-symbols-outlined text-error mt-0.5 text-[20px]">error</span>
+            <p class="font-body-sm text-body-sm">{{ store.error() }}</p>
+          </div>
+        } -->
+        @if (store.error()) {
+          <div class="w-full sm:mr-auto sm:w-auto">
+            <app-validation-errors 
+              [title]="'Application Error'" 
+              [errors]="[store.error()!]"> 
+            </app-validation-errors>
+          </div>
+        }
+        
+        <!-- Start Button -->
+        <button 
+          (click)="startApplication()"
+          [disabled]="!selectedCycleId() || store.isLoading()"
+          [ngClass]="{'opacity-50 cursor-not-allowed': !selectedCycleId() || store.isLoading()}"
+          class="w-full sm:w-auto px-8 py-3 bg-primary text-on-primary rounded text-label-md font-label-md hover:opacity-90 transition-opacity shadow-sm flex items-center justify-center gap-2">
+          
+          @if (store.isLoading()) {
+             Processing...
+          } @else {
+             Start Application
+             <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+          }
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>

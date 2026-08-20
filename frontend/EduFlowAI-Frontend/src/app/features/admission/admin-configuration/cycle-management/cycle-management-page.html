@@ -1,0 +1,491 @@
+<section class="management-page" [attr.dir]="copy.isRtl() ? 'rtl' : 'ltr'">
+  <header class="management-header">
+    <div>
+      <h1>{{ copy.text('Admission cycles & offerings', 'دورات التقديم والمسارات المتاحة') }}</h1>
+      <p>
+        {{
+          copy.text(
+            'Create draft cycles, configure eligibility and capacity, then activate or close the intake.',
+            'أنشئ دورات مسودة وحدد الأهلية والسعات ثم فعّل دورة التقديم أو أغلقها.'
+          )
+        }}
+      </p>
+    </div>
+    <button
+      class="secondary-button"
+      type="button"
+      (click)="load(selectedCycleId())"
+      [disabled]="loading() || busy()"
+    >
+      <span class="material-symbols-outlined" aria-hidden="true">refresh</span>
+      {{ copy.text('Refresh', 'تحديث') }}
+    </button>
+  </header>
+
+  @if (loading()) {
+    <div class="loading-line" role="status"></div>
+  }
+  @if (error()) {
+    <div class="message message--error" role="alert">
+      <span class="material-symbols-outlined" aria-hidden="true">error</span>
+      {{ error() }}
+    </div>
+  }
+  @if (success()) {
+    <div class="message message--success" role="status">
+      <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
+      {{ success() }}
+    </div>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════════
+       PHASE 1 — Cycles List View (no cycle selected)
+       ═══════════════════════════════════════════════════════════ -->
+  @if (!selectedCycleId()) {
+    <section class="panel">
+      <div class="panel-heading">
+        <div>
+          <h2>{{ copy.text('Create admission cycle', 'إنشاء دورة تقديم') }}</h2>
+          <p>
+            {{
+              copy.text('New cycles always start as Draft.', 'تبدأ جميع الدورات الجديدة كمسودة.')
+            }}
+          </p>
+        </div>
+        <span class="count-badge">{{ cycles().length }}</span>
+      </div>
+
+      <form [formGroup]="cycleForm" (ngSubmit)="createCycle()">
+        <div class="form-grid">
+          <div class="field">
+            <label for="cycle-program">{{ copy.text('Program', 'البرنامج') }}</label>
+            <select id="cycle-program" formControlName="programId">
+              <option value="">{{ copy.text('Select program', 'اختر البرنامج') }}</option>
+              @for (program of programs(); track program.id) {
+                <option [value]="program.id">{{ program.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label for="cycle-label">{{ copy.text('Cycle label', 'اسم الدورة') }}</label>
+            <input
+              id="cycle-label"
+              formControlName="label"
+              maxlength="200"
+              [placeholder]="copy.text('Intake 46 - 2026', 'الدفعة 46 - 2026')"
+            />
+          </div>
+          <div class="field">
+            <label for="cycle-start">{{ copy.text('Start date', 'تاريخ البداية') }}</label>
+            <input id="cycle-start" type="date" formControlName="startDate" />
+          </div>
+          <div class="field">
+            <label for="cycle-deadline">{{
+              copy.text('Application deadline', 'آخر موعد للتقديم')
+            }}</label>
+            <input id="cycle-deadline" type="datetime-local" formControlName="deadlineLocal" />
+          </div>
+        </div>
+        <div class="form-actions">
+          <button
+            class="primary-button"
+            type="submit"
+            [disabled]="busy() || programs().length === 0 || cycleForm.invalid"
+          >
+            <span class="material-symbols-outlined" aria-hidden="true">add</span>
+            {{ copy.text('Create draft cycle', 'إنشاء دورة مسودة') }}
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Full-width cycles data table -->
+    <section class="panel">
+      <div class="panel-heading">
+        <div>
+          <h2>{{ copy.text('All Cycles', 'جميع الدورات') }}</h2>
+          <p>
+            {{
+              copy.text(
+                'Click a cycle to manage its configuration.',
+                'اضغط على دورة لإدارة إعداداتها.'
+              )
+            }}
+          </p>
+        </div>
+      </div>
+
+      @if (cycles().length > 0) {
+        <table class="cycles-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>{{ copy.text('Cycle Label', 'اسم الدورة') }}</th>
+              <th>{{ copy.text('Program', 'البرنامج') }}</th>
+              <th>{{ copy.text('Status', 'الحالة') }}</th>
+              <th>{{ copy.text('Offerings', 'العروض') }}</th>
+              <th>{{ copy.text('Capacity', 'السعة') }}</th>
+              <th>{{ copy.text('Deadline', 'الموعد النهائي') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (cycle of cycles(); track cycle.id; let i = $index) {
+              <tr (click)="selectCycle(cycle.id)">
+                <td>{{ i + 1 }}</td>
+                <td>
+                  <strong>{{ cycle.label }}</strong>
+                </td>
+                <td>{{ cycle.programName }}</td>
+                <td>
+                  <span
+                    class="status-badge"
+                    [class.status-badge--active]="cycle.status === CycleStatus.Active"
+                    [class.status-badge--closed]="cycle.status === CycleStatus.Closed"
+                  >
+                    {{ cycleStatusLabel(cycle.status) }}
+                  </span>
+                </td>
+                <td>{{ cycle.offerings.length }}</td>
+                <td>{{ cycleCapacity(cycle) }}</td>
+                <td>{{ formatDeadline(cycle.deadlineUtc) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      } @else {
+        <div class="empty-state">
+          <span class="material-symbols-outlined" aria-hidden="true">event_busy</span>
+          <p>
+            {{ copy.text('No admission cycles are configured.', 'لم تتم إضافة دورات تقديم بعد.') }}
+          </p>
+        </div>
+      }
+    </section>
+  }
+
+  <!-- ═══════════════════════════════════════════════════════════
+       PHASE 2 — Cycle Detail View (cycle selected)
+       ═══════════════════════════════════════════════════════════ -->
+  @if (selectedCycle(); as cycle) {
+    <section class="panel cycle-detail">
+      <!-- Detail header: back button + cycle name + status badge -->
+      <div class="cycle-detail-header">
+        <div>
+          <button class="cycle-detail-back" type="button" (click)="deselectCycle()">
+            <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+            {{ copy.text('Back to All Cycles', 'العودة لجميع الدورات') }}
+          </button>
+          <h2>{{ cycle.label }}</h2>
+          <p>{{ cycle.programName }} · {{ formatDeadline(cycle.deadlineUtc) }}</p>
+        </div>
+        <span
+          class="status-badge"
+          [class.status-badge--active]="cycle.status === CycleStatus.Active"
+          [class.status-badge--closed]="cycle.status === CycleStatus.Closed"
+        >
+          {{ cycleStatusLabel(cycle.status) }}
+        </span>
+      </div>
+
+      <!-- Sub-tabs navigation -->
+      <nav
+        class="sub-tabs"
+        [attr.aria-label]="copy.text('Cycle configuration tabs', 'علامات تبويب إعدادات الدورة')"
+      >
+        <button
+          type="button"
+          [class.is-active]="activeSubTab() === 'overview'"
+          (click)="setSubTab('overview')"
+        >
+          <span class="material-symbols-outlined" aria-hidden="true">dashboard</span>
+          {{ copy.text('Overview & Basic Info', 'نظرة عامة ومعلومات أساسية') }}
+        </button>
+        <button
+          type="button"
+          [class.is-active]="activeSubTab() === 'eligibility'"
+          (click)="setSubTab('eligibility')"
+        >
+          <span class="material-symbols-outlined" aria-hidden="true">rule</span>
+          {{ copy.text('Eligibility Rules', 'قواعد الأهلية') }}
+        </button>
+        <button
+          type="button"
+          [class.is-active]="activeSubTab() === 'offerings'"
+          (click)="setSubTab('offerings')"
+        >
+          <span class="material-symbols-outlined" aria-hidden="true">hub</span>
+          {{ copy.text('Track & Branch Offerings', 'عروض المسارات والفروع') }}
+        </button>
+      </nav>
+
+      <!-- ─── Tab 1: Overview & Basic Info ──────────────────── -->
+      @if (activeSubTab() === 'overview') {
+        <div class="summary-strip">
+          <article>
+            <strong>{{ cycle.offerings.length }}</strong>
+            <small>{{ copy.text('Offerings', 'عروض المسارات') }}</small>
+          </article>
+          <article>
+            <strong>{{ cycleCapacity(cycle) }}</strong>
+            <small>{{ copy.text('Total capacity', 'إجمالي السعة') }}</small>
+          </article>
+          <article>
+            <strong>{{
+              cycle.eligibilityRule ? copy.text('Ready', 'محددة') : copy.text('Missing', 'ناقصة')
+            }}</strong>
+            <small>{{ copy.text('Eligibility', 'الأهلية') }}</small>
+          </article>
+          <article>
+            <strong>{{ cycle.startDate }}</strong>
+            <small>{{ copy.text('Start date', 'تاريخ البداية') }}</small>
+          </article>
+        </div>
+
+        <div class="form-actions">
+          @if (cycle.status === CycleStatus.Draft) {
+            <button
+              class="success-button"
+              type="button"
+              (click)="activateCycle()"
+              [disabled]="busy()"
+            >
+              <span class="material-symbols-outlined" aria-hidden="true">play_circle</span>
+              {{ copy.text('Activate cycle', 'تفعيل الدورة') }}
+            </button>
+          } @else if (cycle.status === CycleStatus.Active) {
+            <button class="danger-button" type="button" (click)="closeCycle()" [disabled]="busy()">
+              <span class="material-symbols-outlined" aria-hidden="true">lock</span>
+              {{ copy.text('Close cycle', 'إغلاق الدورة') }}
+            </button>
+          }
+        </div>
+      }
+
+      <!-- ─── Tab 2: Eligibility Rules ──────────────────────── -->
+      @if (activeSubTab() === 'eligibility') {
+        <div class="panel-heading">
+          <div>
+            <h2>{{ copy.text('Eligibility rule', 'قاعدة الأهلية') }}</h2>
+            <p>
+              {{
+                copy.text(
+                  'These deterministic fields are evaluated before document processing.',
+                  'تُفحص هذه الشروط المحددة قبل معالجة المستندات.'
+                )
+              }}
+            </p>
+          </div>
+        </div>
+
+        @if (!cycle.eligibilityRule && cycle.status !== CycleStatus.Draft) {
+          <div class="message message--warning" role="status">
+            <span class="material-symbols-outlined" aria-hidden="true">warning</span>
+            {{
+              copy.text(
+                'No eligibility rule is stored for this cycle. Configuration is locked after activation, so default values are not shown as if they were saved.',
+                'لا توجد قاعدة أهلية محفوظة لهذه الدورة. الإعدادات مقفلة بعد التفعيل، لذلك لا يتم عرض القيم الافتراضية وكأنها محفوظة.'
+              )
+            }}
+          </div>
+        } @else {
+          @if (cycle.status !== CycleStatus.Draft) {
+            <div class="message message--info" role="status">
+              <span class="material-symbols-outlined" aria-hidden="true">lock</span>
+              {{
+                copy.text(
+                  'Eligibility configuration is read-only after the cycle is activated.',
+                  'إعدادات الأهلية للقراءة فقط بعد تفعيل الدورة.'
+                )
+              }}
+            </div>
+          } @else if (!cycle.eligibilityRule) {
+            <div class="message message--info" role="status">
+              <span class="material-symbols-outlined" aria-hidden="true">info</span>
+              {{
+                copy.text(
+                  'No rule has been saved yet. Review these defaults and save the rule before activation.',
+                  'لم يتم حفظ قاعدة بعد. راجع القيم الافتراضية واحفظ القاعدة قبل التفعيل.'
+                )
+              }}
+            </div>
+          }
+
+          <form [formGroup]="eligibilityForm" (ngSubmit)="saveEligibility()">
+            <div class="form-grid">
+              <div class="field">
+                <label for="nationality">{{ copy.text('Nationality code', 'كود الجنسية') }}</label>
+                <input id="nationality" formControlName="requiredNationality" maxlength="5" />
+              </div>
+              <div class="field">
+                <label for="degree-level">{{ copy.text('Degree level', 'المؤهل الدراسي') }}</label>
+                <input id="degree-level" formControlName="requiredDegreeLevel" maxlength="30" />
+              </div>
+              <div class="field">
+                <label for="graduation-years">{{
+                  copy.text('Maximum years since graduation', 'أقصى عدد سنوات منذ التخرج')
+                }}</label>
+                <input
+                  id="graduation-years"
+                  type="number"
+                  min="0"
+                  max="100"
+                  formControlName="maxYearsSinceGraduation"
+                />
+              </div>
+              <div class="field">
+                <label for="minimum-grade">{{
+                  copy.text('Minimum grade', 'الحد الأدنى للتقدير')
+                }}</label>
+                <select id="minimum-grade" formControlName="minGrade">
+                  @for (grade of gradeOptions; track grade.value) {
+                    <option [ngValue]="grade.value">{{ copy.text(grade.en, grade.ar) }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button
+                class="primary-button"
+                data-testid="save-eligibility"
+                type="submit"
+                [disabled]="
+                  busy() ||
+                  cycle.status !== CycleStatus.Draft ||
+                  eligibilityForm.invalid ||
+                  (cycle.eligibilityRule !== null && eligibilityForm.pristine)
+                "
+              >
+                <span class="material-symbols-outlined" aria-hidden="true">rule</span>
+                {{ copy.text('Save eligibility rule', 'حفظ قاعدة الأهلية') }}
+              </button>
+            </div>
+          </form>
+        }
+      }
+
+      <!-- ─── Tab 3: Track & Branch Offerings ───────────────── -->
+      @if (activeSubTab() === 'offerings') {
+        <div class="panel-heading">
+          <div>
+            <h2>{{ copy.text('Track / branch offerings', 'عروض المسارات والفروع') }}</h2>
+            <p>
+              {{
+                copy.text(
+                  'Each add, capacity update, or removal is saved separately.',
+                  'كل إضافة أو تعديل للسعة أو حذف يتم حفظه بشكل منفصل.'
+                )
+              }}
+            </p>
+          </div>
+          <span class="count-badge">{{ cycle.offerings.length }}</span>
+        </div>
+
+        @if (cycle.status !== CycleStatus.Draft) {
+          <div class="message message--info" role="status">
+            <span class="material-symbols-outlined" aria-hidden="true">lock</span>
+            {{
+              copy.text(
+                'Offerings are read-only after the cycle is activated.',
+                'عروض المسارات والفروع للقراءة فقط بعد تفعيل الدورة.'
+              )
+            }}
+          </div>
+        }
+
+        <form [formGroup]="offeringForm" (ngSubmit)="addOffering()">
+          <div class="form-grid">
+            <div class="field">
+              <label for="offering-track">{{ copy.text('Track', 'المسار') }}</label>
+              <select
+                id="offering-track"
+                formControlName="trackId"
+                (change)="onOfferingTrackChange()"
+              >
+                <option value="">{{ copy.text('Select track', 'اختر المسار') }}</option>
+                @for (track of selectedProgramTracks(); track track.id) {
+                  <option [value]="track.id" [disabled]="!track.isActive">{{ track.name }}</option>
+                }
+              </select>
+            </div>
+            <div class="field">
+              <label for="offering-branch">{{ copy.text('Branch', 'الفرع') }}</label>
+              <select id="offering-branch" formControlName="branchId">
+                <option value="">{{ copy.text('Select branch', 'اختر الفرع') }}</option>
+                @for (branch of availableOfferingBranches(); track branch.id) {
+                  <option [value]="branch.id" [disabled]="!branch.isActive">
+                    {{ branch.name }}
+                  </option>
+                }
+              </select>
+            </div>
+            <div class="field span-2">
+              <label for="offering-capacity">{{ copy.text('Capacity', 'السعة') }}</label>
+              <input id="offering-capacity" type="number" min="1" formControlName="capacity" />
+            </div>
+          </div>
+          <div class="form-actions">
+            <button
+              class="secondary-button"
+              type="submit"
+              [disabled]="busy() || cycle.status !== CycleStatus.Draft || offeringForm.invalid"
+            >
+              <span class="material-symbols-outlined" aria-hidden="true">add</span>
+              {{ copy.text('Add and save offering', 'إضافة العرض وحفظه') }}
+            </button>
+          </div>
+        </form>
+
+        <div class="offering-list">
+          @for (offering of cycle.offerings; track offering.id) {
+            <article class="list-row">
+              <div class="list-row__main">
+                <strong>{{ offering.trackName }}</strong>
+                <small>{{ offering.branchName }}</small>
+              </div>
+              <div class="list-row__meta">
+                <input
+                  #capacityInput
+                  type="number"
+                  min="1"
+                  [value]="offering.capacity"
+                  [disabled]="busy() || cycle.status !== CycleStatus.Draft"
+                  [attr.aria-label]="copy.text('Offering capacity', 'سعة العرض')"
+                />
+                <button
+                  class="text-button"
+                  type="button"
+                  (click)="updateOfferingCapacity(offering, capacityInput.value)"
+                  [disabled]="busy() || cycle.status !== CycleStatus.Draft"
+                >
+                  <span class="material-symbols-outlined" aria-hidden="true">save</span>
+                  {{ copy.text('Update capacity', 'تحديث السعة') }}
+                </button>
+                <button
+                  class="text-button"
+                  type="button"
+                  (click)="removeOffering(offering)"
+                  [disabled]="busy() || cycle.status !== CycleStatus.Draft"
+                >
+                  <span class="material-symbols-outlined" aria-hidden="true">delete</span>
+                  {{ copy.text('Remove', 'حذف') }}
+                </button>
+              </div>
+            </article>
+          } @empty {
+            <div class="empty-state">
+              <span class="material-symbols-outlined" aria-hidden="true">hub</span>
+              <p>
+                {{
+                  copy.text(
+                    'Add at least one track and branch offering.',
+                    'أضف عرضًا واحدًا على الأقل لمسار وفرع.'
+                  )
+                }}
+              </p>
+            </div>
+          }
+        </div>
+      }
+    </section>
+  }
+</section>

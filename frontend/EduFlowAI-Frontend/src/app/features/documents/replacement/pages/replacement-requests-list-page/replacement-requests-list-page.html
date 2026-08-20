@@ -1,0 +1,104 @@
+<section class="requests-page" aria-labelledby="replacement-requests-title">
+  <header class="page-heading">
+    <div>
+      <span class="eyebrow">{{ copy().list.eyebrow }}</span>
+      <h1 id="replacement-requests-title">{{ copy().list.title }}</h1>
+      <p>{{ copy().list.subtitle }}</p>
+    </div>
+    <span class="request-count">
+      <span class="material-symbols-outlined" aria-hidden="true">folder_copy</span>
+      {{ requests().length }} {{ copy().list.count }}
+    </span>
+  </header>
+
+  <div class="request-toolbar" role="search">
+    <label class="search-field">
+      <span class="material-symbols-outlined" aria-hidden="true">search</span>
+      <span class="sr-only">{{ copy().list.search }}</span>
+      <input type="search" [formControl]="searchControl" [placeholder]="copy().list.search" />
+    </label>
+
+    <label class="select-field">
+      <span>{{ copy().list.status }}</span>
+      <select [formControl]="statusControl">
+        <option value="">{{ copy().list.allStatuses }}</option>
+        @for (status of statuses; track status) {
+          <option [value]="status">{{ statusLabel(status) }}</option>
+        }
+      </select>
+    </label>
+
+    <label class="select-field">
+      <span>{{ copy().list.sort }}</span>
+      <select [formControl]="sortControl">
+        <option value="desc">{{ copy().list.newest }}</option>
+        <option value="asc">{{ copy().list.oldest }}</option>
+      </select>
+    </label>
+  </div>
+
+  @if (loading()) {
+    <div class="state-card" aria-live="polite">
+      <span class="material-symbols-outlined" aria-hidden="true">folder_copy</span>
+      <h2>{{ copy().list.loading }}</h2>
+      <p>{{ copy().list.loadingCopy }}</p>
+    </div>
+  } @else if (error()) {
+    <div class="state-card state-card--error" role="alert">
+      <span class="material-symbols-outlined" aria-hidden="true">cloud_off</span>
+      <h2>{{ copy().list.errorTitle }}</h2>
+      <p>{{ copy().list.errorCopy }}</p>
+      <button class="button button--secondary" type="button" (click)="retry()">
+        {{ copy().common.retry }}
+      </button>
+    </div>
+  } @else if (requests().length === 0) {
+    <div class="state-card">
+      <span class="material-symbols-outlined" aria-hidden="true">folder_off</span>
+      <h2>{{ copy().list.emptyTitle }}</h2>
+      <p>{{ copy().list.emptyCopy }}</p>
+    </div>
+  } @else if (filteredRequests().length === 0) {
+    <div class="state-card">
+      <span class="material-symbols-outlined" aria-hidden="true">search_off</span>
+      <h2>{{ copy().list.noResultsTitle }}</h2>
+      <p>{{ copy().list.noResultsCopy }}</p>
+      <button class="button button--secondary" type="button" (click)="clearFilters()">
+        {{ copy().list.clearFilters }}
+      </button>
+    </div>
+  } @else {
+    <div class="request-grid">
+      @for (request of filteredRequests(); track request.id) {
+        <article class="request-card">
+          <div class="request-card__topline">
+            <span class="request-icon" aria-hidden="true">
+              <span class="material-symbols-outlined">draft</span>
+            </span>
+            <span class="status-pill" [attr.data-status]="request.status">
+              {{ statusLabel(request.status) }}
+            </span>
+          </div>
+          <div class="request-card__body">
+            <h2>{{ documentLabel(request.documentType) }}</h2>
+            <p>{{ request.reason }}</p>
+          </div>
+          <footer class="request-card__footer">
+            <span>
+              <span class="material-symbols-outlined" aria-hidden="true">calendar_today</span>
+              {{ copy().list.requested }} {{ formatDate(request.requestedAt) }}
+            </span>
+            <a
+              class="request-link"
+              [routerLink]="['/replacement-requests', request.id]"
+              queryParamsHandling="preserve"
+            >
+              {{ copy().list.openRequest }}
+              <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+            </a>
+          </footer>
+        </article>
+      }
+    </div>
+  }
+</section>

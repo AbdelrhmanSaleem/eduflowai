@@ -1,0 +1,212 @@
+<section class="notifications-page" aria-labelledby="notifications-title">
+  <header class="page-heading">
+    <div>
+      <span class="eyebrow">{{ copy().eyebrow }}</span>
+      <h1 id="notifications-title">{{ copy().title }}</h1>
+      <p>{{ copy().subtitle }}</p>
+    </div>
+    <span class="notification-count">
+      <span class="material-symbols-outlined" aria-hidden="true">notifications</span>
+      {{ totalCount() }} {{ copy().count }}
+    </span>
+  </header>
+
+  <div class="notification-toolbar" role="search">
+    <label class="search-field">
+      <span class="sr-only">{{ copy().search }}</span>
+      <span class="material-symbols-outlined" aria-hidden="true">search</span>
+      <input type="search" [formControl]="searchControl" [placeholder]="copy().search" />
+    </label>
+
+    <label class="select-field">
+      <span>{{ copy().filter }}</span>
+      <select [formControl]="typeControl">
+        <option value="">{{ copy().allTypes }}</option>
+        @for (type of notificationTypes; track type) {
+          <option [value]="type">{{ typeLabel(type) }}</option>
+        }
+      </select>
+    </label>
+
+    <label class="select-field">
+      <span>{{ copy().sort }}</span>
+      <select [formControl]="sortControl">
+        <option value="desc">{{ copy().newest }}</option>
+        <option value="asc">{{ copy().oldest }}</option>
+      </select>
+    </label>
+  </div>
+
+  @if (readUpdateError()) {
+    <p class="read-state-error" role="alert">
+      <span class="material-symbols-outlined" aria-hidden="true">error</span>
+      {{ copy().readUpdateError }}
+    </p>
+  }
+
+  @if (loading()) {
+    <div class="loading-state" aria-live="polite">
+      <span class="material-symbols-outlined" aria-hidden="true">notifications</span>
+      <strong>{{ copy().loading }}</strong>
+      <p>{{ copy().loadingCopy }}</p>
+    </div>
+  } @else if (error()) {
+    <div class="state-card state-card--error" role="alert">
+      <span class="material-symbols-outlined" aria-hidden="true">cloud_off</span>
+      <div>
+        <strong>{{ copy().errorTitle }}</strong>
+        <p>{{ copy().errorCopy }}</p>
+      </div>
+      <button class="button button--secondary" type="button" (click)="retry()">
+        {{ locale.t('common.retry') }}
+      </button>
+    </div>
+  } @else if (notifications().length === 0) {
+    <div class="empty-state">
+      <span class="material-symbols-outlined" aria-hidden="true">notifications_off</span>
+      <h2>{{ copy().emptyTitle }}</h2>
+      <p>{{ copy().emptyCopy }}</p>
+    </div>
+  } @else {
+    <div class="notification-workspace">
+      <section
+        class="notification-list-panel"
+        [style.display]="compactView() && detailOpen() ? 'none' : null"
+        [attr.aria-label]="copy().list"
+      >
+        <div class="panel-heading">
+          <div class="panel-heading__copy">
+            <span>{{ copy().inbox }}</span>
+            <strong>
+              {{ firstVisibleItem() }}–{{ lastVisibleItem() }} {{ copy().of }}
+              {{ totalCount() }}
+            </strong>
+          </div>
+          <button
+            class="mark-all-button"
+            type="button"
+            [disabled]="markingAllRead()"
+            (click)="markAllAsRead()"
+          >
+            <span class="material-symbols-outlined" aria-hidden="true">done_all</span>
+            {{ markingAllRead() ? copy().markingAll : copy().markAll }}
+          </button>
+        </div>
+
+        <div class="notification-list">
+          @for (notification of sortedNotifications(); track notification.id) {
+            <button
+              class="notification-item"
+              [class.notification-item--selected]="notification.id === selectedId()"
+              [class.notification-item--unread]="!notification.isRead"
+              type="button"
+              (click)="selectNotification(notification)"
+            >
+              <span
+                class="notification-item__icon"
+                [attr.data-type]="notification.type"
+                aria-hidden="true"
+              >
+                <span class="material-symbols-outlined">{{ typeIcon(notification.type) }}</span>
+              </span>
+              <span class="notification-item__body">
+                <span class="notification-item__meta">
+                  <strong>{{ typeLabel(notification.type) }}</strong>
+                  <time [attr.datetime]="notification.createdAt">
+                    {{ formatRelativeTime(notification.createdAt) }}
+                  </time>
+                </span>
+                <span class="notification-item__message">
+                  {{ notification.message || copy().noMessage }}
+                </span>
+              </span>
+              @if (!notification.isRead) {
+                <span class="unread-dot" [attr.aria-label]="copy().unread"></span>
+              }
+            </button>
+          }
+        </div>
+
+        @if (totalPages() > 1) {
+          <nav class="pagination" [attr.aria-label]="copy().pagination">
+            <button
+              type="button"
+              [disabled]="page() === 1"
+              [attr.aria-label]="copy().previous"
+              (click)="goToPage(page() - 1)"
+            >
+              <span class="material-symbols-outlined" aria-hidden="true">chevron_left</span>
+            </button>
+            <span>{{ page() }} / {{ totalPages() }}</span>
+            <button
+              type="button"
+              [disabled]="page() === totalPages()"
+              [attr.aria-label]="copy().next"
+              (click)="goToPage(page() + 1)"
+            >
+              <span class="material-symbols-outlined" aria-hidden="true">chevron_right</span>
+            </button>
+          </nav>
+        }
+      </section>
+
+      @if (selectedNotification(); as notification) {
+        <article
+          class="notification-detail"
+          [style.display]="compactView() && !detailOpen() ? 'none' : null"
+          aria-live="polite"
+        >
+          <header class="detail-heading">
+            @if (compactView()) {
+              <button
+                class="button button--secondary back-to-inbox"
+                type="button"
+                [attr.aria-label]="copy().backToInbox"
+                (click)="showInbox()"
+              >
+                <span class="material-symbols-outlined" aria-hidden="true">
+                  {{ locale.isRtl() ? 'arrow_forward' : 'arrow_back' }}
+                </span>
+                {{ copy().backToInbox }}
+              </button>
+            }
+            <span class="status-pill" [attr.data-type]="notification.type">
+              {{ notification.isRead ? copy().read : copy().unread }}
+            </span>
+            <time [attr.datetime]="notification.createdAt">
+              {{ copy().sent }} {{ formatDate(notification.createdAt) }}
+            </time>
+            <h2>{{ typeLabel(notification.type) }}</h2>
+          </header>
+
+          <div class="message-card">
+            <span
+              class="message-card__icon"
+              [attr.data-type]="notification.type"
+              aria-hidden="true"
+            >
+              <span class="material-symbols-outlined">{{ typeIcon(notification.type) }}</span>
+            </span>
+            <div>
+              <span class="message-card__label">{{ copy().message }}</span>
+              <p>{{ notification.message || copy().noMessage }}</p>
+            </div>
+          </div>
+
+          <footer class="detail-actions">
+            @if (notificationAction(notification.type); as action) {
+              <a class="button button--primary" [routerLink]="action.route">
+                {{ copy().actions[action.label] }}
+                <span class="material-symbols-outlined" aria-hidden="true">arrow_forward</span>
+              </a>
+            }
+            <a class="button button--secondary" routerLink="/" fragment="top">
+              <span class="material-symbols-outlined" aria-hidden="true">contact_support</span>
+              {{ copy().actions.support }}
+            </a>
+          </footer>
+        </article>
+      }
+    </div>
+  }
+</section>

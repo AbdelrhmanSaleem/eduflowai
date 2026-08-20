@@ -1,0 +1,62 @@
+<main class="auth-shell" aria-labelledby="confirmation-brand">
+  <header class="auth-brand">
+    <h1 id="confirmation-brand">{{ copy.t('brand') }}</h1>
+  </header>
+
+  <section class="auth-card status-card" aria-live="polite">
+    @switch (state()) {
+      @case ('submitting') {
+        <div class="status-icon status-icon--progress">
+          <span class="material-symbols-outlined" aria-hidden="true">
+            progress_activity
+          </span>
+        </div>
+        <h2>{{ copy.t('confirmationChecking') }}</h2>
+      }
+
+      @case ('success') {
+        <div class="status-icon status-icon--success">
+          <span class="material-symbols-outlined" aria-hidden="true">
+            verified
+          </span>
+        </div>
+        <h2>{{ copy.t('confirmationSuccess') }}</h2>
+        <p>{{ copy.t('confirmationSuccessBody') }}</p>
+        <a class="auth-button" routerLink="/auth/login">
+          {{ copy.t('goToLogin') }}
+        </a>
+      }
+
+      @default {
+        <div class="status-icon status-icon--error">
+          <span class="material-symbols-outlined" aria-hidden="true">
+            link_off
+          </span>
+        </div>
+        <h2>{{ copy.t(errorKey()) }}</h2>
+        <p>
+          {{
+            errorKey() === 'rateLimited'
+              ? copy.t('rateLimited')
+              : errorKey() === 'confirmationInvalid'
+                ? copy.t('confirmationInvalidBody')
+                : copy.t('confirmationTechnicalFailureBody')
+          }}
+        </p>
+        <div class="status-actions">
+          @if (canRetry()) {
+            <button class="auth-button" type="button" (click)="retry()">
+              {{ copy.t('retry') }}
+            </button>
+          }
+          <a
+            class="auth-button auth-button--secondary"
+            routerLink="/auth/login"
+          >
+            {{ copy.t('backToLogin') }}
+          </a>
+        </div>
+      }
+    }
+  </section>
+</main>

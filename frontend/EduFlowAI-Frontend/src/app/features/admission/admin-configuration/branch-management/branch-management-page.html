@@ -1,0 +1,369 @@
+<section class="management-page" [attr.dir]="copy.isRtl() ? 'rtl' : 'ltr'">
+  <!-- Page Header -->
+  <header class="management-header">
+    <div>
+      <h1>{{ copy.text('Branches', 'الفروع') }}</h1>
+      <p>
+        {{
+          copy.text(
+            'Manage delivery locations used by cycle offerings. Each branch serves as a physical site for track execution.',
+            'أدر أماكن التنفيذ المستخدمة في عروض الدورات. كل فرع يمثل موقعًا فعليًا لتنفيذ المسارات.'
+          )
+        }}
+      </p>
+    </div>
+    <div class="flex items-center gap-3">
+      <button
+        type="button"
+        (click)="loadBranches()"
+        [disabled]="loading()"
+        class="inline-flex items-center gap-1.5 rounded-card border border-outline-variant bg-white px-3.5 py-2 text-label-md text-secondary shadow-sm transition-colors hover:bg-surface-container-low disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        <span class="material-symbols-outlined text-base" aria-hidden="true">refresh</span>
+        {{ copy.text('Refresh', 'تحديث') }}
+      </button>
+      <button
+        type="button"
+        (click)="openDrawer()"
+        class="inline-flex items-center gap-1.5 rounded-card bg-primary px-4 py-2 text-label-md text-on-primary shadow-sm transition-colors hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        <span class="material-symbols-outlined text-base" aria-hidden="true">add</span>
+        {{ copy.text('Add Branch', 'إضافة فرع') }}
+      </button>
+    </div>
+  </header>
+
+  <!-- Success Message -->
+  @if (success()) {
+    <div
+      class="mb-4 flex items-center gap-2 rounded-card border border-success-container bg-success-container/40 px-4 py-3 text-body-sm text-success"
+      role="status"
+    >
+      <span class="material-symbols-outlined text-lg" aria-hidden="true">check_circle</span>
+      {{ success() }}
+    </div>
+  }
+
+  <!-- Error Message -->
+  @if (error()) {
+    <div
+      class="mb-4 flex items-center gap-2 rounded-card border border-error-container bg-error-container/40 px-4 py-3 text-body-sm text-error"
+      role="alert"
+    >
+      <span class="material-symbols-outlined text-lg" aria-hidden="true">error</span>
+      {{ error() }}
+    </div>
+  }
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="overflow-hidden rounded-panel border border-outline-variant bg-white shadow-card">
+      <div class="h-1 w-full overflow-hidden bg-surface-container">
+        <div class="h-full w-1/3 animate-pulse rounded-full bg-primary/40"></div>
+      </div>
+      <div class="flex items-center justify-center py-20">
+        <div class="flex flex-col items-center gap-3 text-on-surface-variant">
+          <span class="material-symbols-outlined animate-spin text-3xl" aria-hidden="true"
+            >progress_activity</span
+          >
+          <span class="text-body-sm">{{
+            copy.text('Loading branches…', 'جارٍ تحميل الفروع…')
+          }}</span>
+        </div>
+      </div>
+    </div>
+  } @else {
+    <!-- Data Table Card -->
+    <div class="overflow-hidden rounded-panel border border-outline-variant bg-white shadow-card">
+      <!-- Table Toolbar -->
+      <div
+        class="flex flex-col gap-3 border-b border-outline-variant px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
+      >
+        <div class="flex items-center gap-2">
+          <h2 class="text-label-md text-on-surface">
+            {{ copy.text('All Branches', 'جميع الفروع') }}
+          </h2>
+          <span
+            class="inline-flex items-center rounded-full bg-secondary-container/50 px-2.5 py-0.5 text-label-sm text-on-secondary-container"
+          >
+            {{ filteredBranches().length }}
+          </span>
+        </div>
+        <div class="relative w-full max-w-xs">
+          <span
+            class="material-symbols-outlined pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-lg text-outline"
+            aria-hidden="true"
+            >search</span
+          >
+          <input
+            type="text"
+            [placeholder]="copy.text('Search by name or governorate…', 'ابحث بالاسم أو المحافظة…')"
+            [value]="searchQuery()"
+            (input)="onSearch($event)"
+            class="w-full rounded-card border border-outline-variant bg-surface py-2 pe-3 ps-9 text-body-sm text-on-surface placeholder:text-outline outline-none transition-shadow focus:border-primary focus:ring-2 focus:ring-primary/15"
+          />
+        </div>
+      </div>
+
+      <!-- Table -->
+      @if (filteredBranches().length > 0) {
+        <div class="overflow-x-auto">
+          <table class="w-full text-start">
+            <thead>
+              <tr class="border-b border-outline-variant bg-surface-container-low/50">
+                <th
+                  class="px-5 py-3 text-start text-label-sm uppercase tracking-wider text-on-surface-variant"
+                >
+                  {{ copy.text('Name', 'الاسم') }}
+                </th>
+                <th
+                  class="px-5 py-3 text-start text-label-sm uppercase tracking-wider text-on-surface-variant"
+                >
+                  {{ copy.text('Governorate', 'المحافظة') }}
+                </th>
+                <th
+                  class="px-5 py-3 text-start text-label-sm uppercase tracking-wider text-on-surface-variant"
+                >
+                  {{ copy.text('Status', 'الحالة') }}
+                </th>
+                <th
+                  class="px-5 py-3 text-end text-label-sm uppercase tracking-wider text-on-surface-variant"
+                >
+                  {{ copy.text('Actions', 'إجراءات') }}
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-outline-variant/50">
+              @for (branch of filteredBranches(); track branch.id) {
+                <tr class="transition-colors hover:bg-surface-container-low/30">
+                  <td class="px-5 py-3.5">
+                    <div class="flex items-center gap-2.5">
+                      <div
+                        class="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-container"
+                      >
+                        <span
+                          class="material-symbols-outlined text-base text-on-surface-variant"
+                          aria-hidden="true"
+                          >apartment</span
+                        >
+                      </div>
+                      <span class="text-body-sm font-semibold text-on-surface">{{
+                        branch.name
+                      }}</span>
+                    </div>
+                  </td>
+                  <td class="px-5 py-3.5">
+                    @if (branch.governorate) {
+                      <span
+                        class="inline-flex items-center gap-1 text-body-sm text-on-surface-variant"
+                      >
+                        <span class="material-symbols-outlined text-sm" aria-hidden="true"
+                          >location_on</span
+                        >
+                        {{ branch.governorate }}
+                      </span>
+                    } @else {
+                      <span class="text-label-sm text-outline">{{
+                        copy.text('Not specified', 'غير محددة')
+                      }}</span>
+                    }
+                  </td>
+                  <td class="px-5 py-3.5">
+                    @if (branch.isActive) {
+                      <span
+                        class="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-label-sm font-semibold text-emerald-700"
+                      >
+                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                        {{ copy.text('Active', 'نشط') }}
+                      </span>
+                    } @else {
+                      <span
+                        class="inline-flex items-center gap-1 rounded-full border border-outline-variant bg-surface-container px-2.5 py-0.5 text-label-sm font-semibold text-on-surface-variant"
+                      >
+                        <span class="h-1.5 w-1.5 rounded-full bg-outline"></span>
+                        {{ copy.text('Inactive', 'غير نشط') }}
+                      </span>
+                    }
+                  </td>
+                  <td class="px-5 py-3.5 text-end">
+                    <button
+                      type="button"
+                      (click)="openDrawer(branch)"
+                      [disabled]="busy()"
+                      class="inline-flex items-center gap-1 rounded-card px-2.5 py-1.5 text-label-sm text-primary transition-colors hover:bg-primary/5 disabled:opacity-50"
+                    >
+                      <span class="material-symbols-outlined text-base" aria-hidden="true">edit</span>
+                      {{ copy.text('Edit', 'تعديل') }}
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <!-- Empty State -->
+        <div class="flex flex-col items-center justify-center py-16 text-center">
+          <div
+            class="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-surface-container"
+          >
+            <span class="material-symbols-outlined text-2xl text-outline" aria-hidden="true"
+              >apartment</span
+            >
+          </div>
+          <p class="text-body-sm font-medium text-on-surface-variant">
+            @if (searchQuery()) {
+              {{ copy.text('No branches match your search.', 'لا توجد فروع تطابق بحثك.') }}
+            } @else {
+              {{ copy.text('No branches configured yet.', 'لم تتم إضافة فروع بعد.') }}
+            }
+          </p>
+          @if (!searchQuery()) {
+            <p class="mt-1 max-w-sm text-body-sm text-outline">
+              {{ copy.text('Get started by adding your first branch.', 'ابدأ بإضافة أول فرع.') }}
+            </p>
+            <button
+              type="button"
+              (click)="openDrawer()"
+              class="mt-4 inline-flex items-center gap-1.5 rounded-card bg-primary px-4 py-2 text-label-md text-on-primary shadow-sm transition-colors hover:bg-primary-container"
+            >
+              <span class="material-symbols-outlined text-base" aria-hidden="true">add</span>
+              {{ copy.text('Add Branch', 'إضافة فرع') }}
+            </button>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Slide-over Drawer -->
+  @if (drawerOpen()) {
+    <!-- Backdrop -->
+    <div
+      class="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm transition-opacity"
+      (click)="closeDrawer()"
+      aria-hidden="true"
+    ></div>
+
+    <!-- Drawer Panel -->
+    <aside
+      class="fixed inset-y-0 z-50 flex w-full max-w-md flex-col bg-white shadow-2xl ltr:right-0 rtl:left-0"
+      role="dialog"
+      [attr.aria-label]="
+        editingBranch()
+          ? copy.text('Edit Branch', 'تعديل الفرع')
+          : copy.text('Add Branch', 'إضافة فرع')
+      "
+    >
+      <!-- Drawer Header -->
+      <header class="flex items-center justify-between border-b border-outline-variant px-6 py-4">
+        <div>
+          <h2 class="text-headline-md text-on-surface">
+            {{
+              editingBranch()
+                ? copy.text('Edit Branch', 'تعديل الفرع')
+                : copy.text('Add Branch', 'إضافة فرع')
+            }}
+          </h2>
+          <p class="mt-0.5 text-body-sm text-on-surface-variant">
+            {{
+              copy.text(
+                'Configure branch name, location, and status.',
+                'حدد اسم الفرع والموقع والحالة.'
+              )
+            }}
+          </p>
+        </div>
+        <button
+          type="button"
+          (click)="closeDrawer()"
+          class="flex h-9 w-9 items-center justify-center rounded-full text-on-surface-variant transition-colors hover:bg-surface-container"
+        >
+          <span class="material-symbols-outlined" aria-hidden="true">close</span>
+        </button>
+      </header>
+
+      <!-- Drawer Body -->
+      <form
+        [formGroup]="branchForm"
+        (ngSubmit)="saveBranch()"
+        class="flex flex-1 flex-col overflow-y-auto"
+      >
+        <div class="flex-1 space-y-5 px-6 py-5">
+          <!-- Name Field -->
+          <div class="space-y-1.5">
+            <label for="drawer-branch-name" class="block text-label-md text-on-surface-variant">
+              {{ copy.text('Branch Name', 'اسم الفرع') }}
+            </label>
+            <input
+              id="drawer-branch-name"
+              formControlName="name"
+              maxlength="200"
+              [placeholder]="copy.text('e.g. Smart Village', 'مثال: القرية الذكية')"
+              class="w-full rounded-card border border-outline-variant bg-white px-3.5 py-2.5 text-body-sm text-on-surface placeholder:text-outline outline-none transition-shadow focus:border-primary focus:ring-2 focus:ring-primary/15"
+            />
+          </div>
+
+          <!-- Governorate Field -->
+          <div class="space-y-1.5">
+            <label
+              for="drawer-branch-governorate"
+              class="block text-label-md text-on-surface-variant"
+            >
+              {{ copy.text('Governorate', 'المحافظة') }}
+            </label>
+            <input
+              id="drawer-branch-governorate"
+              formControlName="governorate"
+              maxlength="100"
+              [placeholder]="copy.text('e.g. Giza', 'مثال: الجيزة')"
+              class="w-full rounded-card border border-outline-variant bg-white px-3.5 py-2.5 text-body-sm text-on-surface placeholder:text-outline outline-none transition-shadow focus:border-primary focus:ring-2 focus:ring-primary/15"
+            />
+            <p class="text-label-sm text-outline">
+              {{
+                copy.text(
+                  'Optional. The geographic region this branch is located in.',
+                  'اختياري. المنطقة الجغرافية التي يقع فيها الفرع.'
+                )
+              }}
+            </p>
+          </div>
+
+          <!-- Active Toggle -->
+          <div
+            class="flex items-center gap-3 rounded-card border border-outline-variant bg-surface-container-low/50 px-4 py-3"
+          >
+            <input
+              id="drawer-branch-active"
+              type="checkbox"
+              formControlName="isActive"
+              class="h-4 w-4 rounded border-outline-variant accent-primary"
+            />
+            <label for="drawer-branch-active" class="text-body-sm text-on-surface">
+              {{ copy.text('Branch is active', 'الفرع نشط') }}
+            </label>
+          </div>
+        </div>
+
+        <!-- Drawer Footer -->
+        <div class="flex items-center justify-end gap-3 border-t border-outline-variant px-6 py-4">
+          <button
+            type="button"
+            (click)="closeDrawer()"
+            class="inline-flex items-center rounded-card border border-outline-variant bg-white px-4 py-2 text-label-md text-secondary transition-colors hover:bg-surface-container-low"
+          >
+            {{ copy.text('Cancel', 'إلغاء') }}
+          </button>
+          <button
+            type="submit"
+            [disabled]="busy()"
+            class="inline-flex items-center gap-1.5 rounded-card bg-primary px-4 py-2 text-label-md text-on-primary shadow-sm transition-colors hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <span class="material-symbols-outlined text-base" aria-hidden="true">save</span>
+            {{ editingBranch() ? copy.text('Update', 'تحديث') : copy.text('Save', 'حفظ') }}
+          </button>
+        </div>
+      </form>
+    </aside>
+  }
+</section>

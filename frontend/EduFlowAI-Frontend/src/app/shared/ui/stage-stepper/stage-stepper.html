@@ -1,0 +1,59 @@
+<!-- Main wrapper using Flexbox to stack items vertically with added top margin -->
+<div class="flex flex-col w-full mt-8" dir="ltr">
+    <!-- Loop through the steps -->
+    @for(step of steps(); track step.id; let last = $last){
+        <div class="flex items-start gap-4">
+            <!-- Left Column: The Circle and the Connecting Line -->
+            <div class="flex flex-col items-center">
+                <!-- The Circle -->
+                <div class="w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors duration-300"
+                    [ngClass]="{
+                    'bg-[#166534] border-[#166534] text-white': step.status === 'Passed',
+                    'bg-primary border-primary text-white': step.status === 'InProgress',
+                    'bg-red-50 border-red-500 text-red-600': step.status === 'NotPassed',
+                    'bg-gray-100 border-gray-300 text-gray-400': step.status === 'Pending'
+                    }">
+              
+                    <!-- The Icon changes based on the status -->
+                    <span class="material-symbols-outlined text-base font-bold">
+                        {{ 
+                        step.status === 'Passed' ? 'check' : 
+                        step.status === 'NotPassed' ? 'close' : 
+                        step.status === 'InProgress' ? 'edit' : 'lock' 
+                        }}
+                    </span>
+                </div>
+
+                <!-- The connecting line -->
+                @if (!last) {
+                    <div class="w-0.5 h-12 my-2 transition-colors duration-300"
+                        [ngClass]="step.status === 'Passed' ? 'bg-[#166534]' : 'bg-gray-200'">
+                    </div>
+                }
+            </div>
+
+            <!-- Right Column: The Text Details -->
+            <div class="pt-1">
+                <!-- Exam Name -->
+                <h4 class="font-headline-md text-lg transition-colors duration-300"
+                    [ngClass]="step.status === 'Pending' ? 'text-gray-400' : 'text-on-background'">
+                {{ step.name }}
+                </h4>
+                
+                <!-- Status Text -->
+                <p class="font-body-sm text-sm mt-1">
+                <span class="text-on-surface-variant">Status: </span>
+                <span class="font-bold"
+                        [ngClass]="{
+                        'text-[#166534]': step.status === 'Passed',
+                        'text-primary': step.status === 'InProgress',
+                        'text-red-600': step.status === 'NotPassed',
+                        'text-gray-400': step.status === 'Pending'
+                        }">
+                    {{ step.status }}
+                </span>
+                </p>
+            </div>
+        </div>
+    }
+ </div>

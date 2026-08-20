@@ -1,0 +1,513 @@
+<section class="management-page" [attr.dir]="copy.isRtl() ? 'rtl' : 'ltr'">
+  <!-- Header & Program Context Selector -->
+  <header class="management-header">
+    <div>
+      <div class="mb-1 flex items-center gap-2">
+        <span class="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-label-sm font-semibold text-primary">
+          <span class="material-symbols-outlined text-sm" aria-hidden="true">monitoring</span>
+          {{ copy.text('Executive Command Center', 'مركز التحكم التنفيذي') }}
+        </span>
+      </div>
+      <h1>{{ copy.text('Admission Overview', 'نظرة عامة على القبول') }}</h1>
+      <p>
+        {{
+          copy.text(
+            'Monitor cycle readiness, applicant volume, and system configurations.',
+            'تابع جاهزية دورات القبول، حجم طلبات التقديم، وحالة إعدادات النظام.'
+          )
+        }}
+      </p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <!-- Program Filter -->
+      <div class="flex items-center gap-2 rounded-card border border-outline-variant bg-white px-3 py-1.5 shadow-sm">
+        <label for="overview-program-select" class="text-label-sm font-medium text-on-surface-variant">
+          {{ copy.text('Program:', 'البرنامج:') }}
+        </label>
+        <select
+          id="overview-program-select"
+          [value]="selectedProgramId()"
+          (change)="onProgramChange($event)"
+          [disabled]="loading() || programs().length === 0"
+          class="bg-transparent text-body-sm font-semibold text-on-surface outline-none disabled:opacity-50"
+        >
+          @if (programs().length === 0) {
+            <option value="">
+              {{ copy.text('No programs available', 'لا توجد برامج متاحة') }}
+            </option>
+          } @else {
+            @for (program of programs(); track program.id) {
+              <option [value]="program.id">{{ program.name }}</option>
+            }
+          }
+        </select>
+      </div>
+
+      <!-- Refresh Button -->
+      <button
+        type="button"
+        (click)="load()"
+        [disabled]="loading()"
+        class="inline-flex items-center gap-1.5 rounded-card border border-outline-variant bg-white px-3.5 py-2 text-label-md text-secondary shadow-sm transition-colors hover:bg-surface-container-low disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        <span class="material-symbols-outlined text-base" aria-hidden="true">refresh</span>
+        {{ copy.text('Refresh', 'تحديث') }}
+      </button>
+    </div>
+  </header>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="overflow-hidden rounded-panel border border-outline-variant bg-white shadow-card">
+      <div class="h-1 w-full overflow-hidden bg-surface-container">
+        <div class="h-full w-1/3 animate-pulse rounded-full bg-primary/40"></div>
+      </div>
+      <div class="flex items-center justify-center py-20">
+        <div class="flex flex-col items-center gap-3 text-on-surface-variant">
+          <span class="material-symbols-outlined animate-spin text-3xl" aria-hidden="true">progress_activity</span>
+          <span class="text-body-sm">{{ copy.text('Loading command center metrics…', 'جارٍ تحميل مؤشرات لوحة التحكم…') }}</span>
+        </div>
+      </div>
+    </div>
+  } @else if (error()) {
+    <!-- Error State -->
+    <div class="flex flex-col items-center justify-center rounded-panel border border-error-container bg-error-container/20 p-8 text-center" role="alert">
+      <span class="material-symbols-outlined text-4xl text-error" aria-hidden="true">error</span>
+      <strong class="mt-2 text-headline-md text-error">{{ error() }}</strong>
+      <button
+        type="button"
+        (click)="load()"
+        class="mt-4 inline-flex items-center gap-1.5 rounded-card bg-primary px-4 py-2 text-label-md text-on-primary shadow-sm hover:bg-primary-container"
+      >
+        <span class="material-symbols-outlined text-base" aria-hidden="true">refresh</span>
+        {{ copy.text('Try Again', 'إعادة المحاولة') }}
+      </button>
+    </div>
+  } @else if (dashboard(); as data) {
+    <!-- Top Grid: Core KPI Metrics (4 Cards Grid) -->
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+
+      <!-- KPI 1: Active Intake -->
+      <article class="flex flex-col justify-between rounded-panel border border-outline-variant bg-white p-5 shadow-card transition-shadow hover:shadow-md">
+        <div class="flex items-start justify-between gap-2">
+          <div>
+            <span class="text-label-sm font-semibold uppercase tracking-wider text-on-surface-variant">
+              {{ copy.text('Active Intake', 'دورة التقديم النشطة') }}
+            </span>
+            <h3 class="mt-1.5 text-headline-md font-bold text-on-surface truncate max-w-[180px]">
+              {{ data.activeCycle?.label || copy.text('None Active', 'لا توجد دورة') }}
+            </h3>
+          </div>
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <span class="material-symbols-outlined text-xl" aria-hidden="true">calendar_month</span>
+          </div>
+        </div>
+        <div class="mt-4 flex items-center justify-between border-t border-outline-variant/60 pt-3">
+          <span class="text-label-sm text-outline truncate max-w-[140px]">
+            {{ data.activeCycle ? data.activeCycle.programName : copy.text('No active cycle', 'لا توجد دورة نشطة') }}
+          </span>
+          @if (data.activeCycle) {
+            <span class="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-label-sm font-semibold text-emerald-700">
+              <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+              {{ copy.text('Active', 'نشطة') }}
+            </span>
+          } @else {
+            <span class="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-100 px-2.5 py-0.5 text-label-sm font-semibold text-slate-600">
+              <span class="h-1.5 w-1.5 rounded-full bg-slate-400"></span>
+              {{ copy.text('Inactive', 'غير نشطة') }}
+            </span>
+          }
+        </div>
+      </article>
+
+      <!-- KPI 2: Applications Volume -->
+      <article class="flex flex-col justify-between rounded-panel border border-outline-variant bg-white p-5 shadow-card transition-shadow hover:shadow-md">
+        <div class="flex items-start justify-between gap-2">
+          <div>
+            <span class="text-label-sm font-semibold uppercase tracking-wider text-on-surface-variant">
+              {{ copy.text('Applications Volume', 'حجم طلبات التقديم') }}
+            </span>
+            <h3 class="mt-1.5 text-headline-xl font-extrabold text-primary">
+              {{ data.applicationCount }}
+            </h3>
+          </div>
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700">
+            <span class="material-symbols-outlined text-xl" aria-hidden="true">groups</span>
+          </div>
+        </div>
+        <div class="mt-4 flex items-center justify-between border-t border-outline-variant/60 pt-3 text-label-sm text-outline">
+          <span>{{ copy.text('Total registered applicants', 'إجمالي المتقدمين المسجلين') }}</span>
+          <span class="material-symbols-outlined text-sm text-primary" aria-hidden="true">trending_up</span>
+        </div>
+      </article>
+
+      <!-- KPI 3: Offerings & Capacity -->
+      <article class="flex flex-col justify-between rounded-panel border border-outline-variant bg-white p-5 shadow-card transition-shadow hover:shadow-md">
+        <div class="flex items-start justify-between gap-2">
+          <div>
+            <span class="text-label-sm font-semibold uppercase tracking-wider text-on-surface-variant">
+              {{ copy.text('Capacity & Seats', 'السعة والمقاعد') }}
+            </span>
+            <h3 class="mt-1.5 text-headline-md font-bold text-on-surface">
+              {{ data.activeCycleCapacity }} {{ copy.text('Seats', 'مقعدًا') }}
+            </h3>
+          </div>
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700">
+            <span class="material-symbols-outlined text-xl" aria-hidden="true">event_seat</span>
+          </div>
+        </div>
+        <div class="mt-4 flex items-center justify-between border-t border-outline-variant/60 pt-3 text-label-sm text-on-surface-variant">
+          <span>{{ data.activeCycleOfferingCount }} {{ copy.text('Offerings Active', 'مسارًا وفرعًا متاحًا') }}</span>
+          <span class="font-mono text-outline">{{ data.activeTrackCount }}T / {{ data.activeBranchCount }}B</span>
+        </div>
+      </article>
+
+      <!-- KPI 4: System Readiness Score -->
+      <article class="flex flex-col justify-between rounded-panel border border-outline-variant bg-white p-5 shadow-card transition-shadow hover:shadow-md">
+        <div class="flex items-start justify-between gap-2">
+          <div>
+            <span class="text-label-sm font-semibold uppercase tracking-wider text-on-surface-variant">
+              {{ copy.text('System Readiness', 'جاهزية النظام') }}
+            </span>
+            <h3 class="mt-1.5 text-headline-xl font-bold text-on-surface">
+              {{ systemReadiness().score }}%
+            </h3>
+          </div>
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+            <span class="material-symbols-outlined text-xl" aria-hidden="true">verified</span>
+          </div>
+        </div>
+        <div class="mt-4 border-t border-outline-variant/60 pt-3">
+          <div class="flex items-center justify-between text-label-sm mb-1.5">
+            <span
+              class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-semibold text-xs"
+              [class]="systemReadiness().badgeBg"
+            >
+              <span class="h-1.5 w-1.5 rounded-full" [class]="systemReadiness().dotColor"></span>
+              {{ copy.text(systemReadiness().labelEn, systemReadiness().labelAr) }}
+            </span>
+          </div>
+          <div class="h-1.5 w-full overflow-hidden rounded-full bg-surface-container">
+            <div
+              class="h-full rounded-full transition-all duration-500"
+              [class]="systemReadiness().score >= 80 ? 'bg-emerald-500' : (systemReadiness().score >= 40 ? 'bg-amber-500' : 'bg-rose-500')"
+              [style.width.%]="systemReadiness().score"
+            ></div>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <!-- Middle Workspace: Deep Dive & Pipeline Breakdown (2 Column Layout) -->
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+
+      <!-- Left Column (2 Spans): Active Intake Deep Dive + Pipeline Breakdown -->
+      <div class="space-y-6 lg:col-span-2">
+
+        <!-- Active Intake Deep-Dive Panel (Hero Card) -->
+        <article class="rounded-panel border border-outline-variant bg-white p-6 shadow-card">
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-outline-variant/60 pb-4">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-label-sm font-semibold uppercase tracking-wider text-outline">
+                  {{ copy.text('Intake Overview', 'ملف الدورة النشطة') }}
+                </span>
+                @if (data.activeCycle) {
+                  <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-label-sm font-semibold text-emerald-800">
+                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-600"></span>
+                    {{ copy.text('Active Cycle', 'دورة نشطة') }}
+                  </span>
+                }
+              </div>
+              <h2 class="mt-1 text-headline-lg font-bold text-on-surface">
+                {{ data.activeCycle?.label || copy.text('No Active Cycle Configured', 'لا توجد دورة قبول نشطة') }}
+              </h2>
+            </div>
+            
+            <!-- Buttons Container -->
+            <div class="flex flex-wrap items-center gap-3">
+              <!-- Demo/Simulate Button (Only visible if there is an active cycle) -->
+              @if (data.activeCycle) {
+                <a
+                  [routerLink]="['/admin/admission/assessment/simulate']"
+                  [queryParams]="{ cycleId: data.activeCycle.id }"
+                  class="inline-flex shrink-0 items-center gap-1.5 rounded-card border border-amber-200 bg-amber-50 px-4 py-2.5 text-label-md font-semibold text-amber-700 shadow-sm transition-colors hover:bg-amber-100"
+                >
+                  <span class="material-symbols-outlined text-base" aria-hidden="true">magic_button</span>
+                  {{ copy.text('Demo Tools', 'أدوات المحاكاة') }}
+                </a>
+              }
+              
+              <!-- Manage/Launch Cycle Button -->
+              <a
+                routerLink="/admin/admission/cycles"
+                class="inline-flex shrink-0 items-center gap-1.5 rounded-card bg-primary px-4 py-2.5 text-label-md text-on-primary shadow-sm transition-colors hover:bg-primary-container"
+              >
+                <span class="material-symbols-outlined text-base" aria-hidden="true">
+                  {{ data.activeCycle ? 'settings' : 'add_circle' }}
+                </span>
+                {{ data.activeCycle ? copy.text('Manage Active Cycle', 'إدارة الدورة النشطة') : copy.text('Launch New Cycle', 'إطلاق دورة جديدة') }}
+              </a>
+            </div>
+          </div>
+
+          @if (data.activeCycle; as cycle) {
+            <div class="mt-5 space-y-5">
+              <!-- Seat Capacity Progress Bar -->
+              <div class="rounded-card border border-outline-variant/80 bg-surface-container-low/40 p-4">
+                <div class="flex items-center justify-between text-body-sm font-medium text-on-surface mb-2">
+                  <span class="flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-primary text-lg" aria-hidden="true">pie_chart</span>
+                    {{ copy.text('Seat Enrollment Progress', 'نسبة استيعاب المقاعد') }}
+                  </span>
+                  <span class="font-bold text-primary">
+                    {{ data.applicationCount }} / {{ data.activeCycleCapacity }} {{ copy.text('Seats Enrolled', 'مقعدًا مسجلاً') }}
+                    <span class="text-xs text-outline font-normal">({{ capacityPercentage() }}%)</span>
+                  </span>
+                </div>
+                <div class="h-3 w-full overflow-hidden rounded-full bg-surface-container">
+                  <div
+                    class="h-full rounded-full bg-primary transition-all duration-700"
+                    [style.width.%]="capacityPercentage()"
+                  ></div>
+                </div>
+              </div>
+
+              <!-- Metadata Grid -->
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div class="rounded-card border border-outline-variant/60 bg-white p-3.5">
+                  <span class="block text-label-sm text-outline">{{ copy.text('Academic Program', 'البرنامج الأكاديمي') }}</span>
+                  <strong class="mt-1 block text-body-sm text-on-surface font-semibold truncate">{{ cycle.programName }}</strong>
+                </div>
+
+                <div class="rounded-card border border-outline-variant/60 bg-white p-3.5">
+                  <span class="block text-label-sm text-outline">{{ copy.text('Application Deadline', 'آخر موعد للتقديم') }}</span>
+                  <div class="mt-1 flex items-center justify-between">
+                    <strong class="text-body-sm text-on-surface font-semibold">{{ formatDate(cycle.deadlineUtc) }}</strong>
+                    <span class="rounded-full bg-amber-50 px-2 py-0.5 text-label-sm font-medium text-amber-700">
+                      {{ getDaysRemaining(cycle.deadlineUtc) }}
+                    </span>
+                  </div>
+                </div>
+
+                <div class="rounded-card border border-outline-variant/60 bg-white p-3.5">
+                  <span class="block text-label-sm text-outline">{{ copy.text('Active Offerings', 'المسارات والفروع المتاحة') }}</span>
+                  <strong class="mt-1 block text-body-sm text-on-surface font-semibold">
+                    {{ data.activeCycleOfferingCount }} {{ copy.text('Offerings configured', 'عروض مهيأة') }}
+                  </strong>
+                </div>
+              </div>
+            </div>
+          } @else {
+            <!-- Empty Active Cycle State -->
+            <div class="mt-5 flex flex-col items-center justify-center rounded-card border border-dashed border-outline-variant py-10 text-center">
+              <div class="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-surface-container">
+                <span class="material-symbols-outlined text-2xl text-outline" aria-hidden="true">edit_calendar</span>
+              </div>
+              <h3 class="text-body-lg font-semibold text-on-surface">
+                {{ copy.text('No cycle currently active', 'لا توجد دورة قبول نشطة حاليًا') }}
+              </h3>
+              <p class="mt-1 max-w-md text-body-sm text-outline">
+                {{
+                  copy.text(
+                    'Create a cycle, configure eligibility rules and offerings, then activate it to begin receiving applicant profiles.',
+                    'أنشئ دورة قبول، وحدد قواعد الأهلية والمسارات المتاحة، ثم فعّلها لبدء استقبال الطلبات.'
+                  )
+                }}
+              </p>
+              <a
+                routerLink="/admin/admission/cycles"
+                class="mt-4 inline-flex items-center gap-1.5 rounded-card bg-primary px-4 py-2 text-label-md text-on-primary shadow-sm hover:bg-primary-container"
+              >
+                <span class="material-symbols-outlined text-base" aria-hidden="true">add</span>
+                {{ copy.text('Configure Cycles', 'إعداد الدورات') }}
+              </a>
+            </div>
+          }
+        </article>
+
+        <!-- Applications Pipeline Breakdown Widget -->
+        <article class="rounded-panel border border-outline-variant bg-white p-6 shadow-card">
+          <div class="flex items-center justify-between border-b border-outline-variant/60 pb-4 mb-5">
+            <div>
+              <h2 class="text-headline-md font-bold text-on-surface">
+                {{ copy.text('Applications Pipeline Breakdown', 'توزيع مراحل طلبات التقديم') }}
+              </h2>
+              <p class="mt-0.5 text-body-sm text-on-surface-variant">
+                {{ copy.text('Current distribution of applicants across pipeline statuses.', 'التوزيع الحالي للطلبات عبر مراحل التقديم المعتمدة.') }}
+              </p>
+            </div>
+            <span class="rounded-full bg-surface-container px-3 py-1 text-label-sm font-semibold text-on-surface-variant">
+              {{ data.applicationCount }} {{ copy.text('Total', 'الإجمالي') }}
+            </span>
+          </div>
+
+          <!-- Stacked Progress Bar -->
+          <div class="mb-6 space-y-2">
+            <div class="flex h-4 w-full overflow-hidden rounded-full bg-surface-container">
+              @for (stage of pipelineBreakdown(); track stage.labelEn) {
+                @if (stage.percentage > 0) {
+                  <div
+                    [class]="stage.colorClass"
+                    [style.width.%]="stage.percentage"
+                    [title]="copy.text(stage.labelEn, stage.labelAr) + ': ' + stage.count + ' (' + stage.percentage + '%)'"
+                    class="h-full transition-all duration-500 first:rounded-s-full last:rounded-e-full"
+                  ></div>
+                }
+              }
+            </div>
+          </div>
+
+          <!-- Status Pills Grid -->
+          <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            @for (stage of pipelineBreakdown(); track stage.labelEn) {
+              <div class="flex flex-col justify-between rounded-card border border-outline-variant/60 bg-surface-container-low/30 p-3.5">
+                <div class="flex items-center justify-between">
+                  <span
+                    class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-label-sm font-medium"
+                    [class]="stage.bgClass"
+                  >
+                    <span class="material-symbols-outlined text-xs" aria-hidden="true">{{ stage.icon }}</span>
+                    {{ copy.text(stage.labelEn, stage.labelAr) }}
+                  </span>
+                  <span class="text-label-sm font-mono text-outline">{{ stage.percentage }}%</span>
+                </div>
+                <div class="mt-3">
+                  <span class="text-headline-md font-bold text-on-surface">{{ stage.count }}</span>
+                  <span class="ms-1 text-label-sm text-outline">{{ copy.text('applicants', 'متقدمًا') }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        </article>
+      </div>
+
+      <!-- Right Column (1 Span): Quick Shortcuts & Configuration Health -->
+      <aside class="h-full">
+        <article class="flex h-full flex-col justify-between rounded-panel border border-outline-variant bg-white p-6 shadow-card">
+          <!-- Card Header -->
+          <div class="border-b border-outline-variant/60 pb-4">
+            <h2 class="text-headline-md font-bold text-on-surface">
+              {{ copy.text('Configuration Health', 'حالة جاهزية الإعدادات') }}
+            </h2>
+            <p class="mt-0.5 text-body-sm text-on-surface-variant">
+              {{ copy.text('Quick navigation and module status.', 'تنقل سريع وحالة المكونات.') }}
+            </p>
+          </div>
+
+          <!-- Shortcuts Navigation List (Dynamically expands to fill height) -->
+          <nav class="my-4 flex flex-1 flex-col justify-between gap-3">
+            <!-- Shortcut 1: Institutions & Programs -->
+            <a
+              routerLink="/admin/admission/programs"
+              class="group flex items-start gap-3 rounded-card border border-outline-variant/80 bg-white p-3.5 transition-all hover:border-primary/40 hover:bg-primary/5 hover:shadow-sm"
+            >
+              <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-container text-primary transition-colors group-hover:bg-primary group-hover:text-white">
+                <span class="material-symbols-outlined text-lg" aria-hidden="true">school</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between">
+                  <strong class="text-body-sm font-semibold text-on-surface group-hover:text-primary transition-colors">
+                    {{ copy.text('Institutions & Programs', 'المؤسسات والبرامج') }}
+                  </strong>
+                  <span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-label-sm font-medium text-emerald-700">
+                    {{ copy.text('Configured', 'مكتمل') }}
+                  </span>
+                </div>
+                <p class="mt-0.5 text-label-sm text-outline truncate">
+                  {{ data.institutionCount }} {{ copy.text('Institutions', 'مؤسسات') }} · {{ data.programCount }} {{ copy.text('Programs', 'برامج') }}
+                </p>
+              </div>
+            </a>
+
+            <!-- Shortcut 2: Document Requirements -->
+            <a
+              routerLink="/admin/admission/document-requirements"
+              class="group flex items-start gap-3 rounded-card border border-outline-variant/80 bg-white p-3.5 transition-all hover:border-primary/40 hover:bg-primary/5 hover:shadow-sm"
+            >
+              <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-container text-primary transition-colors group-hover:bg-primary group-hover:text-white">
+                <span class="material-symbols-outlined text-lg" aria-hidden="true">description</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between">
+                  <strong class="text-body-sm font-semibold text-on-surface group-hover:text-primary transition-colors">
+                    {{ copy.text('Document Requirements', 'المستندات المطلوبة') }}
+                  </strong>
+                  <span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-label-sm font-medium text-blue-700">
+                    {{ copy.text('Ready', 'جاهز') }}
+                  </span>
+                </div>
+                <p class="mt-0.5 text-label-sm text-outline truncate">
+                  {{ copy.text('Program-scoped applicant requirements', 'مستندات المتقدمين حسب البرنامج') }}
+                </p>
+              </div>
+            </a>
+
+            <!-- Shortcut 3: Tracks & Branches -->
+            <a
+              routerLink="/admin/admission/tracks"
+              class="group flex items-start gap-3 rounded-card border border-outline-variant/80 bg-white p-3.5 transition-all hover:border-primary/40 hover:bg-primary/5 hover:shadow-sm"
+            >
+              <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-container text-primary transition-colors group-hover:bg-primary group-hover:text-white">
+                <span class="material-symbols-outlined text-lg" aria-hidden="true">hub</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between">
+                  <strong class="text-body-sm font-semibold text-on-surface group-hover:text-primary transition-colors">
+                    {{ copy.text('Tracks & Branches', 'المسارات والفروع') }}
+                  </strong>
+                  <span class="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-label-sm font-medium text-emerald-700">
+                    {{ copy.text('Active', 'نشط') }}
+                  </span>
+                </div>
+                <p class="mt-0.5 text-label-sm text-outline truncate">
+                  {{ data.activeTrackCount }} {{ copy.text('Tracks', 'مسارات') }} · {{ data.activeBranchCount }} {{ copy.text('Branches', 'فروع') }}
+                </p>
+              </div>
+            </a>
+
+            <!-- Shortcut 4: Cycles & Offerings -->
+            <a
+              routerLink="/admin/admission/cycles"
+              class="group flex items-start gap-3 rounded-card border border-outline-variant/80 bg-white p-3.5 transition-all hover:border-primary/40 hover:bg-primary/5 hover:shadow-sm"
+            >
+              <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-container text-primary transition-colors group-hover:bg-primary group-hover:text-white">
+                <span class="material-symbols-outlined text-lg" aria-hidden="true">event_note</span>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between">
+                  <strong class="text-body-sm font-semibold text-on-surface group-hover:text-primary transition-colors">
+                    {{ copy.text('Cycles & Offerings', 'الدورات والسعات') }}
+                  </strong>
+                  <span
+                    class="inline-flex items-center rounded-full px-2 py-0.5 text-label-sm font-medium"
+                    [class]="data.activeCycle ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'"
+                  >
+                    {{ data.activeCycle ? copy.text('Active Intake', 'دورة نشطة') : copy.text('Setup Needed', 'يتطلب إعدادًا') }}
+                  </span>
+                </div>
+                <p class="mt-0.5 text-label-sm text-outline truncate">
+                  {{ data.draftCycleCount }} {{ copy.text('Drafts', 'مسودات') }} · {{ data.closedCycleCount }} {{ copy.text('Closed', 'مغلقة') }}
+                </p>
+              </div>
+            </a>
+          </nav>
+
+          <!-- Bottom Footer Status Widget -->
+          <div class="mt-2 flex items-center justify-between rounded-card border border-emerald-200/80 bg-emerald-50/60 px-4 py-3 text-label-sm text-emerald-800">
+            <div class="flex items-center gap-2">
+              <span class="relative flex h-2.5 w-2.5">
+                <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+              </span>
+              <span class="font-semibold">{{ copy.text('System Status:', 'حالة النظام:') }}</span>
+              <span>{{ copy.text('All Services Operational', 'جميع الخدمات تعمل بنجاح') }}</span>
+            </div>
+            <span class="material-symbols-outlined text-base text-emerald-600" aria-hidden="true">check_circle</span>
+          </div>
+        </article>
+      </aside>
+    </div>
+  }
+</section>

@@ -1,0 +1,175 @@
+# ==========================================================================
+# GitHub Actions CI/CD pipeline for EduFlowAI Backend
+# Triggers on every push to `main`, and can also be run manually
+# (workflow_dispatch) from the Actions tab.
+#
+# What it does, in order:
+#   1. Restores, builds, and tests the .NET solution
+#   2. Builds Docker images for both the API and Worker
+#   3. Pushes both images to Amazon ECR, tagged with the git commit SHA
+#   4. Registers a NEW task definition revision for each service
+#      (rather than just overwriting :latest) so a bad deploy can be
+#      rolled back to a specific previous revision
+#   5. Updates both ECS services to use the new revision and waits
+#      until ECS confirms the new tasks are actually healthy
+# ==========================================================================
+
+name: Deploy EduFlowAI Backend to AWS ECS
+
+# ---- When this workflow runs ----
+on:
+  push:
+    branches:
+      - main            # auto-run on every push to main
+  workflow_dispatch:     # also allow manually triggering from the GitHub UI
+
+# ---- Shared values used across every job/step below ----
+# Centralizing these means you only change them in one place if a name
+# ever changes (e.g. renaming the cluster or a repo).
+env:
+  AWS_REGION: us-east-1
+  ECR_REPOSITORY_API: eduflowai-api
+  ECR_REPOSITORY_WORKER: eduflowai-worker
+  ECS_CLUSTER: eduflowai-cluster
+  ECS_SERVICE_API: eduflowai-api-service
+  ECS_SERVICE_WORKER: eduflowai-worker-service
+  TASK_FAMILY_API: eduflowai-api-task
+  TASK_FAMILY_WORKER: eduflowai-worker-task
+  CONTAINER_API: eduflowai-api        # must match the container "name" inside the task definition
+  CONTAINER_WORKER: eduflowai-worker  # must match the container "name" inside the task definition
+
+jobs:
+  # ========================================================================
+  # JOB 1: Build & Run Tests
+  # Runs first. If tests fail, the deploy job never starts (see `needs:`
+  # below on the second job) — this stops broken code from ever reaching AWS.
+  # ========================================================================
+  build-and-test:
+    name: Build & Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4   # pulls your repo's code into the runner
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'  # match your project's target framework
+
+      - name: Restore Dependencies
+        run: dotnet restore EduFlowAI.slnx
+
+      - name: Build Solution
+        run: dotnet build EduFlowAI.slnx --configuration Release --no-restore
+
+      - name: Run Unit Tests
+        run: dotnet test EduFlowAI.slnx --configuration Release --no-build --verbosity normal
+
+  # ========================================================================
+  # JOB 2: Build, Push & Deploy to ECS
+  # Only runs if `build-and-test` succeeded (see `needs:` below).
+  # ========================================================================
+  deploy-to-aws:
+    name: Build, Push & Deploy to ECS
+    needs: build-and-test   # <-- this is the gate: skips this job entirely if tests failed
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Authenticates this workflow run as your dedicated CI IAM user
+      # (github-actions-eduflowai), using the secrets you added in
+      # GitHub repo Settings → Secrets and variables → Actions.
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # Logs the Docker daemon on this runner into your ECR registry so
+      # the `docker push` commands below are authorized.
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # ---------------- API image ----------------
+      # Tags the image TWO ways:
+      #   - with the git commit SHA (unique, immutable — used for the actual deploy)
+      #   - with :latest (convenience tag, e.g. for manual `docker pull ...:latest`)
+      - name: Build, Tag & Push API Image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY_API:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY_API:latest -f EduFlowAI.Api/Dockerfile .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY_API:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY_API:latest
+
+      # ---------------- Worker image ----------------
+      - name: Build, Tag & Push Worker Image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY_WORKER:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY_WORKER:latest -f EduFlowAI.Worker/Dockerfile .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY_WORKER:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY_WORKER:latest
+
+      # ---------------- API: register new task definition revision ----------------
+      # Step 1: pull down the CURRENTLY active task definition JSON as a
+      # starting point, so we don't have to hardcode env vars, CPU/memory,
+      # roles, etc. here — we just want to swap the image.
+      - name: Download current API task definition
+        run: |
+          aws ecs describe-task-definition --task-definition $TASK_FAMILY_API \
+            --query taskDefinition > api-task-def.json
+
+      # Step 2: take that JSON and replace only the image field for the
+      # "eduflowai-api" container with the freshly built/pushed image
+      # (tagged by commit SHA, not :latest — so this deploy is pinned to
+      # an exact, reproducible image).
+      - name: Render new API task definition
+        id: render-api
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: api-task-def.json
+          container-name: ${{ env.CONTAINER_API }}
+          image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_API }}:${{ github.sha }}
+
+      # Step 3: register that modified JSON as a brand new task definition
+      # revision (e.g. eduflowai-api-task:5), then update the ECS service
+      # to use it. `wait-for-service-stability: true` makes this step
+      # BLOCK until ECS confirms the new tasks are actually healthy —
+      # if they crash-loop, this step (and the whole workflow) fails loudly
+      # instead of silently leaving a broken deployment running.
+      - name: Deploy API service
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render-api.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE_API }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
+
+      # ---------------- Worker: same three-step pattern as the API above ----------------
+      - name: Download current Worker task definition
+        run: |
+          aws ecs describe-task-definition --task-definition $TASK_FAMILY_WORKER \
+            --query taskDefinition > worker-task-def.json
+
+      - name: Render new Worker task definition
+        id: render-worker
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: worker-task-def.json
+          container-name: ${{ env.CONTAINER_WORKER }}
+          image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY_WORKER }}:${{ github.sha }}
+
+      - name: Deploy Worker service
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.render-worker.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE_WORKER }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true

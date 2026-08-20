@@ -1,0 +1,56 @@
+<div class="public-shell">
+  <header class="public-shell__header">
+    <a
+      class="brand"
+      routerLink="/tracks"
+      [attr.aria-label]="locale.t('layout.homeLabel')"
+    >
+      <span class="brand__mark" aria-hidden="true">EF</span>
+      <span>
+        <strong>{{ locale.t('app.name') }}</strong>
+        <small>{{ locale.t('app.tagline') }}</small>
+      </span>
+    </a>
+
+    <div class="public-shell__actions">
+      <nav [attr.aria-label]="text('Public navigation', 'التنقل العام')">
+        <a
+          routerLink="/tracks"
+          routerLinkActive="is-active"
+          [routerLinkActiveOptions]="{ exact: false }"
+        >
+          {{ text('Explore tracks', 'استكشف المسارات') }}
+        </a>
+        <a
+          routerLink="/auth/login"
+          routerLinkActive="is-active"
+          [routerLinkActiveOptions]="{ exact: false }"
+        >
+          {{ text('Sign in', 'تسجيل الدخول') }}
+        </a>
+      </nav>
+
+      <!--00 <button
+        class="language-button"
+        type="button"
+        (click)="locale.toggle()"
+        [attr.aria-label]="locale.t('common.language')"
+      >
+        <span class="material-symbols-outlined" aria-hidden="true">language</span>
+        {{ locale.t('common.language') }}
+      </button> -->
+    </div>
+  </header>
+
+  <main class="public-shell__content">
+    <router-outlet />
+  </main>
+
+  <footer class="public-shell__footer">
+    <span>{{ locale.t('footer.copyright') }}</span>
+    <nav [attr.aria-label]="locale.t('layout.legal')">
+      <a href="#">{{ locale.t('footer.privacy') }}</a>
+      <a href="#">{{ locale.t('footer.terms') }}</a>
+    </nav>
+  </footer>
+</div>

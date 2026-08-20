@@ -1,0 +1,115 @@
+<div class="bg-surface border border-outline-variant rounded-lg p-6 md:p-8 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.04),0_2px_4px_-1px_rgba(0,0,0,0.02)]">
+    <div class="relative pl-2 md:pl-4 rtl:pl-0 rtl:pr-2 rtl:md:pr-4">
+
+        <!-- Loop through the stages -->
+        @for (stage of stageViews(); track stage.type; let isLast = $last) {
+            <div class="timeline-item relative flex gap-6 rtl:flex-row-reverse group" 
+                 [class.pb-12]="!isLast" 
+                 [class.opacity-75]="stage.status === 'Pending'">
+                
+                <!-- Vertical Line connecting the stages -->
+                @if (!isLast) {
+                    <div class="absolute left-[23px] top-[48px] bottom-[-16px] w-[2px] bg-outline-variant rtl:left-auto rtl:right-[23px] z-0"></div>
+                }
+
+                <!-- Timeline Icon Indicator -->
+                @if (stage.status === 'Passed') {
+                    <div class="relative z-10 flex-shrink-0 w-12 h-12 rounded-full bg-[#D1FAE5] border-2 border-[#065F46] flex items-center justify-center mt-1">
+                        <span class="material-symbols-outlined text-[#065F46]" style="font-variation-settings: 'FILL' 1;">check</span>
+                    </div>
+                } @else if (stage.status === 'Failed') {
+                    <div class="relative z-10 flex-shrink-0 w-12 h-12 rounded-full bg-error-container border-2 border-error flex items-center justify-center mt-1">
+                        <span class="material-symbols-outlined text-error" style="font-variation-settings: 'FILL' 1;">close</span>
+                    </div>
+                } @else if (stage.status === 'InProgress') {
+                    <div class="relative z-10 flex-shrink-0 w-12 h-12 rounded-full bg-surface border-2 border-primary-container flex items-center justify-center mt-1">
+                        <div class="w-3 h-3 rounded-full bg-primary-container animate-pulse"></div>
+                    </div>
+                } @else {
+                    <div class="relative z-10 flex-shrink-0 w-12 h-12 rounded-full bg-surface border-2 border-outline-variant flex items-center justify-center mt-1">
+                        <span class="w-2 h-2 rounded-full bg-outline-variant"></span>
+                    </div>
+                }
+
+                <!-- Stage Card Content -->
+                <div class="flex-1 rounded-lg p-5 transition-shadow rtl:text-right relative overflow-hidden"
+                     [ngClass]="{
+                        'bg-surface-container-lowest border border-outline-variant hover:shadow-sm': stage.status === 'Passed' || stage.status === 'Failed',
+                        'bg-surface border border-primary-container/30 shadow-sm': stage.status === 'InProgress',
+                        'bg-surface-container-low border border-outline-variant': stage.status === 'Pending'
+                     }">
+                     
+                     <!-- Left Color Accent for Active/Failed states -->
+                     @if (stage.status === 'InProgress') {
+                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-primary-container rtl:left-auto rtl:right-0"></div>
+                     }
+                     @if (stage.status === 'Failed') {
+                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-error rtl:left-auto rtl:right-0"></div>
+                     }
+
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-3">
+                        <div>
+                            <h3 class="font-headline-md text-headline-md" 
+                                [ngClass]="stage.status === 'InProgress' ? 'text-primary-container font-semibold' : 'text-on-surface'">
+                                {{ stage.title }}
+                            </h3>
+                            <p class="font-body-sm text-body-sm mt-1" 
+                               [ngClass]="stage.status === 'Pending' ? 'text-outline' : 'text-on-surface-variant'">
+                                {{ stage.description }}
+                            </p>
+                        </div>
+
+                        <!-- Status Badge -->
+                        @if (stage.status === 'Passed') {
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-label-sm text-label-sm bg-[#D1FAE5] text-[#065F46] border border-[#065F46]/20 self-start">Passed</span>
+                        } @else if (stage.status === 'Failed') {
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-label-sm text-label-sm bg-error-container text-error border border-error/20 self-start">Failed</span>
+                        } @else if (stage.status === 'InProgress') {
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-label-sm text-label-sm bg-primary-fixed text-on-primary-fixed border border-primary-fixed-dim/50 self-start gap-1">
+                                <span class="material-symbols-outlined text-[14px]">sync</span> In Progress
+                            </span>
+                        } @else {
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-label-sm text-label-sm bg-[#F1F5F9] text-[#475569] border border-outline-variant self-start">Pending</span>
+                        }
+                    </div>
+
+                    <!-- Card Footer: Score or Pending message -->
+                    @if (stage.status === 'Passed' || stage.status === 'Failed') {
+                        <div class="bg-surface-container-low rounded p-3 flex items-center justify-between border border-outline-variant/50 mt-4">
+                            <span class="font-label-md text-label-md text-on-surface-variant">Final Score</span>
+                            <span class="font-headline-md text-headline-md font-bold" [ngClass]="stage.status === 'Passed' ? 'text-primary' : 'text-error'">
+                                {{ stage.data?.score ?? 0 }} 
+                                <span class="font-body-sm text-body-sm text-on-surface-variant font-normal">/ {{ stage.data?.maxScore ?? 100 }}</span>
+                            </span>
+                        </div>
+                    } @else if (stage.status === 'InProgress') {
+                        <div class="bg-surface-container rounded p-4 border border-outline-variant border-dashed flex items-center justify-center mt-4">
+                            <p class="font-body-sm text-body-sm text-on-surface-variant text-center flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[18px]">hourglass_empty</span>
+                                Evaluation currently underway. Scores will appear here once finalized.
+                            </p>
+                        </div>
+                    } @else {
+                        <div class="mt-4 pt-4 border-t border-outline-variant/50">
+                            <p class="font-body-sm text-body-sm text-outline flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[18px]">lock</span>
+                                Stage locked pending previous requirements.
+                            </p>
+                        </div>
+                    }
+                </div>
+            </div>
+        } @empty {
+            <!-- Empty State: Displayed when there are no assessment stages yet -->
+            <div class="flex flex-col items-center justify-center py-12 text-center animate-in fade-in duration-500">
+                <div class="w-20 h-20 bg-surface-container rounded-full flex items-center justify-center mb-5 border border-outline-variant/50">
+                    <span class="material-symbols-outlined text-4xl text-primary/60" style="font-variation-settings: 'FILL' 0;">assignment_add</span>
+                </div>
+                <h3 class="font-headline-md text-headline-md text-on-surface mb-2">No Assessments Assigned Yet</h3>
+                <p class="font-body-md text-body-md text-on-surface-variant max-w-md">
+                    You currently do not have any active or completed assessment stages. Once your exams are scheduled and evaluated, the results will automatically appear here.
+                </p>
+            </div>
+        }
+    </div>
+</div>

@@ -1,0 +1,75 @@
+<div class="role-shell" [attr.dir]="locale.isRtl() ? 'rtl' : 'ltr'">
+  <header>
+    <a class="brand" routerLink="/admin/admission" [attr.aria-label]="locale.t('app.name')">
+      <span class="brand__logo" aria-hidden="true">
+        <img src="/edu-logo-dark.png" alt="" width="1536" height="1024" />
+      </span>
+    </a>
+    <div class="actions">
+      <!--00
+      <button type="button" (click)="locale.toggle()">
+        <span class="material-symbols-outlined" aria-hidden="true">language</span>
+        {{ locale.t('common.language') }}
+      </button>
+      -->
+      <button type="button" (click)="logout()">
+        <span class="material-symbols-outlined" aria-hidden="true">logout</span>
+        {{ locale.t('common.logout') }}
+      </button>
+    </div>
+  </header>
+
+  <div class="admin-navigation">
+    <nav [attr.aria-label]="text('Admission administration', 'إدارة القبول')">
+      <a routerLink="/admin/admission" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }">
+        <span class="material-symbols-outlined" aria-hidden="true">dashboard</span>
+        {{ text('Overview', 'نظرة عامة') }}
+      </a>
+      <a routerLink="/admin/admission/institutions" routerLinkActive="is-active">
+        <span class="material-symbols-outlined" aria-hidden="true">account_balance</span>
+        {{ text('Institutions', 'المؤسسات') }}
+      </a>
+      <a routerLink="/admin/admission/programs" routerLinkActive="is-active">
+        <span class="material-symbols-outlined" aria-hidden="true">school</span>
+        {{ text('Programs', 'البرامج') }}
+      </a>
+      <a routerLink="/admin/admission/document-requirements" routerLinkActive="is-active">
+        <span class="material-symbols-outlined" aria-hidden="true">description</span>
+        {{ text('Document Requirements', 'المستندات المطلوبة') }}
+      </a>
+      <a routerLink="/admin/admission/tracks" routerLinkActive="is-active">
+        <span class="material-symbols-outlined" aria-hidden="true">route</span>
+        {{ text('Tracks', 'المسارات') }}
+      </a>
+      <a routerLink="/admin/admission/branches" routerLinkActive="is-active">
+        <span class="material-symbols-outlined" aria-hidden="true">apartment</span>
+        {{ text('Branches', 'الفروع') }}
+      </a>
+      <a routerLink="/admin/admission/cycles" routerLinkActive="is-active">
+        <span class="material-symbols-outlined" aria-hidden="true">event_note</span>
+        {{ text('Cycles', 'الدورات') }}
+      </a>
+      <a routerLink="/admin/knowledge-base" routerLinkActive="is-active">
+        <span class="material-symbols-outlined" aria-hidden="true">library_books</span>
+        {{ text('Knowledge Base', 'قاعدة المعرفة') }}
+      </a>
+      <a routerLink="/tracks">
+        <span class="material-symbols-outlined" aria-hidden="true">visibility</span>
+        {{ text('Public catalog', 'الكتالوج العام') }}
+      </a>
+    </nav>
+  </div>
+
+  <main>
+    <section class="welcome">
+      <span class="material-symbols-outlined" aria-hidden="true">
+        admin_panel_settings
+      </span>
+      <div>
+        <h1>{{ locale.t('layout.admin.title') }}</h1>
+        <p>{{ session.email() }}</p>
+      </div>
+    </section>
+    <router-outlet />
+  </main>
+</div>

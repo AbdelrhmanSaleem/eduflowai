@@ -1,0 +1,82 @@
+<!-- Main Container for the Status Page -->
+<div class="w-full h-full flex flex-col relative min-h-[600px]">
+
+  <!-- Global Loading State -->
+  @if (store.isLoading() || store.isStatusDetailsLoading()) {
+  <div class="absolute inset-0 z-50 flex items-center justify-center bg-surface/50 backdrop-blur-sm rounded-lg">
+    <div class="flex flex-col items-center gap-3">
+      <span class="material-symbols-outlined animate-spin text-primary text-4xl">sync</span>
+      <p class="font-label-md text-on-surface-variant">Loading status details...</p>
+    </div>
+  </div>
+  }
+
+  <!-- Error State -->
+  @if (store.error()) {
+  <div class="bg-error-container text-on-error-container p-4 rounded-lg flex items-center gap-2 mb-4">
+    <span class="material-symbols-outlined">error</span>
+    <p class="font-body-md">{{ store.error() }}</p>
+  </div>
+  }
+
+  <!-- Content Switcher based on Application Status -->
+  @if (store.summaryData(); as summary) {
+  <div class="flex-1 flex flex-col">
+    @switch (summary.currentStatus) {
+
+    <!-- Phase 1: Eligibility Passed -> Documents Required -->
+    @case ('DocumentsRequired') {
+    <app-eligibility-result [details]="store.eligibilityDetails()" [applicationId]="applicationId">
+
+      <!-- This link is projected into the [success-action] slot -->
+      <a success-action [routerLink]="['/applications', applicationId, 'documents']"
+        class="bg-primary hover:bg-primary/90 text-on-primary font-label-md text-label-md py-3.5 px-8 rounded-lg shadow-sm transition-all duration-200 active:scale-95 flex items-center gap-2">
+        Proceed to Document Upload
+        <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+      </a>
+    </app-eligibility-result>
+    }
+    @case ('DocumentRejected') {
+      <app-document-upload-management 
+        [applicationId]="applicationId" 
+        mode="revision">
+      </app-document-upload-management>
+    }
+
+    <!-- Phase 2: Eligibility Results -->
+    @case ('EligibilityFailed') {
+    <app-eligibility-result [details]="store.eligibilityDetails()" [applicationId]="applicationId">
+
+      <!-- This button is projected into the [failed-action] slot -->
+      <button failed-action [routerLink]="['/applications', applicationId]"
+        class="bg-primary-container text-on-primary font-label-md text-label-md py-3 px-8 rounded-lg hover:bg-primary transition-colors duration-200 shadow-sm flex items-center gap-2">
+        <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+        Return to Dashboard
+      </button>
+    </app-eligibility-result>
+    }
+
+    <!-- Phase 3: Assessment Tracking -->
+    @case ('AssessmentInProgress') {
+      <app-assessment-progress-tracking [stages]="store.stagesResults()"></app-assessment-progress-tracking>
+    }
+    @case ('AssessmentCompleted') {
+      <app-assessment-progress-tracking [stages]="store.stagesResults()"></app-assessment-progress-tracking>
+    }
+
+    <!-- Default Fallback (e.g. Under Verification, Draft, Expired, etc.) -->
+    @default {
+    <div
+      class="flex-1 flex flex-col items-center justify-center p-12 bg-surface-container-lowest rounded-xl border border-outline-variant shadow-sm text-center">
+      <span class="material-symbols-outlined text-secondary text-5xl mb-4">pending_actions</span>
+      <h3 class="font-headline-md text-on-surface mb-2">Application is Processing</h3>
+      <p class="font-body-md text-on-surface-variant max-w-md mx-auto">
+        Your application is currently in the <strong>{{ summary.currentStatus }}</strong> stage.
+        Please check back later for actionable updates.
+      </p>
+    </div>
+    }
+    }
+  </div>
+  }
+</div>

@@ -1,0 +1,158 @@
+<section class="details-page">
+  @if (loading()) {
+    <div class="state-card" aria-live="polite">
+      <span class="material-symbols-outlined" aria-hidden="true">folder_copy</span>
+      <h1>{{ copy().details.loading }}</h1>
+    </div>
+  } @else if (error()) {
+    <div class="state-card state-card--error" role="alert">
+      <span class="material-symbols-outlined" aria-hidden="true">error</span>
+      <h1>{{ copy().details.errorTitle }}</h1>
+      <p>{{ copy().details.errorCopy }}</p>
+      <div class="state-actions">
+        <button class="button button--secondary" type="button" (click)="retry()">
+          {{ copy().common.retry }}
+        </button>
+        <a
+          class="button button--primary"
+          routerLink="/replacement-requests"
+          [queryParams]="returnQueryParams"
+        >
+          {{ copy().details.backToRequests }}
+        </a>
+      </div>
+    </div>
+  } @else if (request(); as item) {
+    <nav class="breadcrumbs" [attr.aria-label]="copy().details.breadcrumb">
+      <a routerLink="/replacement-requests" [queryParams]="returnQueryParams">
+        {{ copy().details.breadcrumb }}
+      </a>
+      <span class="material-symbols-outlined" aria-hidden="true">chevron_right</span>
+      <span>{{ documentLabel(item.documentType) }}</span>
+    </nav>
+
+    <header class="page-heading">
+      <h1>{{ copy().details.titlePrefix }} {{ documentLabel(item.documentType) }}</h1>
+      <p>{{ copy().details.subtitle }}</p>
+    </header>
+
+    <div class="details-grid">
+      <aside class="request-sidebar">
+        <section class="info-card">
+          <h2>{{ copy().details.currentStatus }}</h2>
+          <span class="status-pill" [attr.data-status]="item.status">
+            {{ statusLabel(item.status) }}
+          </span>
+          <div class="feedback-box">
+            <strong>
+              <span class="material-symbols-outlined" aria-hidden="true">rate_review</span>
+              {{ copy().details.reviewerFeedback }}
+            </strong>
+            <p>“{{ item.reason }}”</p>
+          </div>
+        </section>
+
+        <section class="info-card summary-card">
+          <h2>{{ copy().details.requestSummary }}</h2>
+          <dl>
+            <div>
+              <dt>{{ copy().details.documentType }}</dt>
+              <dd>{{ documentLabel(item.documentType) }}</dd>
+            </div>
+            <div>
+              <dt>{{ copy().details.requestedOn }}</dt>
+              <dd>{{ formatDate(item.requestedAt) }}</dd>
+            </div>
+          </dl>
+        </section>
+      </aside>
+
+      <main class="upload-card">
+        @if (item.status === 'Open') {
+          <div class="upload-heading">
+            <div>
+              <h2>{{ copy().details.uploadTitle }}</h2>
+              <p>{{ copy().details.uploadFormats }}</p>
+            </div>
+            <span class="status-pill" data-status="Open">{{ statusLabel(item.status) }}</span>
+          </div>
+
+          <label
+            class="dropzone"
+            [class.dropzone--dragging]="dragging()"
+            [class.dropzone--selected]="selectedFile()"
+            (dragover)="dragOver($event)"
+            (dragleave)="dragLeave($event)"
+            (drop)="dropFile($event)"
+          >
+            <input type="file" accept=".pdf,.jpg,.jpeg,.png" (change)="selectFile($event)" />
+            <span class="upload-icon" aria-hidden="true">
+              <span class="material-symbols-outlined">cloud_upload</span>
+            </span>
+            @if (selectedFile(); as file) {
+              <strong>{{ copy().details.selectedFile }}</strong>
+              <span class="file-name">{{ file.name }}</span>
+              <span class="file-size">{{ formatFileSize(file) }}</span>
+            } @else {
+              <strong>{{ copy().details.dropFile }}</strong>
+              <span>{{ copy().details.or }}</span>
+              <span class="browse-button">{{ copy().details.browse }}</span>
+            }
+          </label>
+
+          @if (fileError()) {
+            <p class="form-message form-message--error" role="alert">{{ fileError() }}</p>
+          }
+
+          @if (selectedFile()) {
+            <button class="remove-file" type="button" (click)="clearFile()">
+              <span class="material-symbols-outlined" aria-hidden="true">delete</span>
+              {{ copy().details.remove }}
+            </button>
+          }
+
+          <div class="note-card">
+            <span class="material-symbols-outlined" aria-hidden="true">info</span>
+            <p>{{ copy().details.note }}</p>
+          </div>
+
+          @if (uploadError()) {
+            <p class="form-message form-message--error" role="alert">
+              {{ copy().details.uploadError }}
+            </p>
+          }
+
+          <footer class="upload-actions">
+            <button class="button button--secondary" type="button" (click)="clearFile()">
+              {{ copy().details.cancel }}
+            </button>
+            <button
+              class="button button--primary"
+              type="button"
+              [disabled]="!selectedFile() || uploading()"
+              (click)="submit()"
+            >
+              <span class="material-symbols-outlined" aria-hidden="true">upload</span>
+              {{ uploading() ? copy().details.submitting : copy().details.submit }}
+            </button>
+          </footer>
+        } @else {
+          <div class="fulfilled-state">
+            <span class="material-symbols-outlined" aria-hidden="true">task_alt</span>
+            <h2>{{ copy().details.fulfilledTitle }}</h2>
+            <p>
+              {{ uploadSuccess() ? copy().details.uploadSuccess : copy().details.fulfilledCopy }}
+            </p>
+            <a
+              class="button button--primary"
+              routerLink="/replacement-requests"
+              [queryParams]="returnQueryParams"
+            >
+              {{ copy().details.backToRequests }}
+            </a>
+          </div>
+        }
+      </main>
+    </div>
+  }
+</section>

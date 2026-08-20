@@ -1,0 +1,191 @@
+<section class="details" [attr.dir]="copy.isRtl() ? 'rtl' : 'ltr'">
+  <a class="details__back" routerLink="/tracks">
+    <span class="material-symbols-outlined" aria-hidden="true">
+      {{ copy.isRtl() ? 'arrow_forward' : 'arrow_back' }}
+    </span>
+    {{ copy.text('backToCatalog') }}
+  </a>
+
+  @if (loading()) {
+    <div class="details-state" role="status">
+      <span class="loading-spinner" aria-hidden="true"></span>
+      <p>{{ copy.text('loading') }}</p>
+    </div>
+  } @else if (notFound()) {
+    <div class="details-state">
+      <span class="details-state__icon material-symbols-outlined" aria-hidden="true">
+        search_off
+      </span>
+      <h1>{{ copy.text('detailsNotFound') }}</h1>
+      <a routerLink="/tracks">{{ copy.text('backToCatalog') }}</a>
+    </div>
+  } @else if (loadFailed()) {
+    <div class="details-state" role="alert">
+      <span class="details-state__icon material-symbols-outlined" aria-hidden="true">
+        cloud_off
+      </span>
+      <h1>{{ copy.text('detailsLoadFailed') }}</h1>
+      <button type="button" (click)="load()">
+        <span class="material-symbols-outlined" aria-hidden="true">refresh</span>
+        {{ copy.text('retry') }}
+      </button>
+    </div>
+  } @else if (track(); as item) {
+    <article class="details__content">
+      <header class="details__hero">
+        <div class="details__hero-copy">
+          <span class="details__status">
+            <span class="details__status-dot" aria-hidden="true"></span>
+            {{ copy.text(item.isOfficialIntake47 ? 'activeIntake' : 'activeTrack') }}
+          </span>
+          @if (item.category) {
+            <span class="details__category">{{ item.category }}</span>
+          }
+          <h1>{{ item.name }}</h1>
+          <p>{{ item.description || copy.text('notProvided') }}</p>
+          @if (item.officialTrackUrl) {
+            <a
+              class="details__official-link"
+              [href]="item.officialTrackUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {{ copy.text('officialTrackPage') }}
+              <span class="material-symbols-outlined" aria-hidden="true">open_in_new</span>
+            </a>
+          }
+        </div>
+
+        <div class="details__summary" aria-label="Track availability summary">
+          <div>
+            <span class="material-symbols-outlined" aria-hidden="true">location_on</span>
+            <strong>{{ item.locations.length }}</strong>
+            <small>
+              {{ copy.text('locationCount', { count: item.locations.length }) }}
+            </small>
+          </div>
+          @if (item.isOfficialIntake47) {
+            <div>
+              <span class="material-symbols-outlined" aria-hidden="true">schedule</span>
+              <strong>{{ formatHours(item) }}</strong>
+              <small>{{ copy.text('totalHours') }}</small>
+            </div>
+            <div>
+              <span class="material-symbols-outlined" aria-hidden="true">workspace_premium</span>
+              <strong>{{ item.minimumGrade || copy.text('notProvided') }}</strong>
+              <small>{{ copy.text('minimumGrade') }}</small>
+            </div>
+          }
+          @if (item.offerings.length > 0) {
+            <div>
+              <span class="material-symbols-outlined" aria-hidden="true">groups</span>
+              <strong>{{ totalCapacity() }}</strong>
+              <small>{{ copy.text('capacity') }}</small>
+            </div>
+          }
+        </div>
+      </header>
+
+      @if (item.isOfficialIntake47) {
+        <section class="details-panel">
+          <div class="details-panel__heading">
+            <span class="material-symbols-outlined" aria-hidden="true">verified_user</span>
+            <div>
+              <h2>{{ copy.text('eligibility') }}</h2>
+              <p>{{ copy.text('eligibilityDescription') }}</p>
+            </div>
+          </div>
+
+          <p class="details-panel__eligibility">
+            {{ item.eligibilitySummary || copy.text('notProvided') }}
+          </p>
+          <dl class="eligibility-facts">
+            <div>
+              <dt>{{ copy.text('minimumGrade') }}</dt>
+              <dd>{{ item.minimumGrade || copy.text('notProvided') }}</dd>
+            </div>
+            <div>
+              <dt>{{ copy.text('graduationWindow') }}</dt>
+              <dd>{{ graduationWindow(item) }}</dd>
+            </div>
+          </dl>
+        </section>
+      }
+
+      <section class="details-panel details-panel--about">
+        <div class="details-panel__heading">
+          <span class="material-symbols-outlined" aria-hidden="true">menu_book</span>
+          <div>
+            <h2>{{ copy.text('aboutTrack') }}</h2>
+            <p>{{ copy.text('prerequisites') }}</p>
+          </div>
+        </div>
+
+        @if (item.prerequisiteTopics.length > 0) {
+          <div class="topic-list">
+            @for (topic of item.prerequisiteTopics; track topic) {
+              <span>{{ topic }}</span>
+            }
+          </div>
+        } @else {
+          <p class="details-panel__empty">
+            {{ copy.text('noPrerequisites') }}
+          </p>
+        }
+      </section>
+
+      <section class="details-panel">
+        <div class="details-panel__heading">
+          <span class="material-symbols-outlined" aria-hidden="true">apartment</span>
+          <div>
+            <h2>
+              {{ copy.text(item.isOfficialIntake47 ? 'officialLocations' : 'branchOfferings') }}
+            </h2>
+            <p>
+              {{
+                copy.text(
+                  item.isOfficialIntake47
+                    ? 'officialLocationsDescription'
+                    : 'branchOfferingsDescription'
+                )
+              }}
+            </p>
+          </div>
+        </div>
+
+        @if (item.locations.length > 0) {
+          <div class="offering-grid">
+            @for (location of item.locations; track location.branchId) {
+              <article class="offering-card">
+                <div class="offering-card__icon">
+                  <span class="material-symbols-outlined" aria-hidden="true">domain</span>
+                </div>
+                <div class="offering-card__body">
+                  <h3>{{ location.branchName }}</h3>
+                  <dl>
+                    <div>
+                      <dt>{{ copy.text('governorate') }}</dt>
+                      <dd>{{ location.governorate || copy.text('notProvided') }}</dd>
+                    </div>
+                    @if (capacityForLocation(item, location.branchId); as capacity) {
+                      <div>
+                        <dt>{{ copy.text('capacity') }}</dt>
+                        <dd>{{ copy.text('seats', { count: capacity }) }}</dd>
+                      </div>
+                    }
+                  </dl>
+                </div>
+              </article>
+            }
+          </div>
+        } @else {
+          <p class="details-panel__empty">{{ copy.text('noLocations') }}</p>
+        }
+
+        @if (item.offerings.length === 0) {
+          <p class="capacity-note">{{ copy.text('noActiveCapacity') }}</p>
+        }
+      </section>
+    </article>
+  }
+</section>

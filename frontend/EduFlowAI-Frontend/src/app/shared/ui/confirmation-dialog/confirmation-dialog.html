@@ -1,0 +1,41 @@
+<div class="dialog-backdrop" (click)="cancel()">
+  <section
+    class="confirmation-dialog"
+    role="alertdialog"
+    aria-modal="true"
+    aria-labelledby="confirmation-dialog-title"
+    aria-describedby="confirmation-dialog-message"
+    cdkTrapFocus
+    cdkTrapFocusAutoCapture
+    (click)="stopPropagation($event)"
+    (keydown.escape)="cancel()"
+  >
+    <span class="confirmation-icon" aria-hidden="true">
+      <span class="material-symbols-outlined">task_alt</span>
+    </span>
+    <h2 id="confirmation-dialog-title">{{ config().title }}</h2>
+    <p id="confirmation-dialog-message">{{ config().message }}</p>
+    @if (errorMessage()) {
+      <p class="submission-error" role="alert">{{ errorMessage() }}</p>
+    }
+    <footer>
+      <button
+        class="button button--secondary"
+        type="button"
+        [disabled]="submitting()"
+        (click)="cancel()"
+      >
+        {{ config().cancelLabel }}
+      </button>
+      <button
+        class="button button--primary"
+        type="button"
+        [disabled]="submitting()"
+        cdkFocusInitial
+        (click)="confirmed.emit()"
+      >
+        {{ submitting() ? config().submittingLabel : config().confirmLabel }}
+      </button>
+    </footer>
+  </section>
+</div>

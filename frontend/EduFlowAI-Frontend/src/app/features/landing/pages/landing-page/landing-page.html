@@ -1,0 +1,809 @@
+<div class="landing-page" [attr.data-theme]="theme()" [class.menu-open]="mobileMenuOpen()">
+  <header class="site-header">
+    <div class="container nav">
+      <a
+        class="brand"
+        routerLink="/"
+        fragment="top"
+        [attr.aria-label]="locale.t('landing.a11y.home')"
+      >
+        <span class="brand-logo" aria-hidden="true">
+          <img
+            [src]="theme() === 'dark' ? '/edu-logo-light.png' : '/edu-logo-dark.png'"
+            alt=""
+            width="1536"
+            height="1024"
+          />
+        </span>
+        <span class="brand-icon" aria-hidden="true">
+          <img
+            [src]="theme() === 'dark' ? '/edu-icon-light.png' : '/edu-icon-dark.png'"
+            alt=""
+            width="1024"
+            height="1024"
+          />
+        </span>
+      </a>
+
+      <nav class="nav-center" [attr.aria-label]="locale.t('landing.a11y.primaryNavigation')">
+        <a class="nav-link" routerLink="/" fragment="programs">
+          {{ locale.t('landing.nav.programs') }}
+        </a>
+        <a class="nav-link" routerLink="/" fragment="tracks">
+          {{ locale.t('landing.nav.tracks') }}
+        </a>
+        <a class="nav-link" routerLink="/" fragment="eligibility">
+          {{ locale.t('landing.nav.eligibility') }}
+        </a>
+        <a class="nav-link" routerLink="/" fragment="process">
+          {{ locale.t('landing.nav.process') }}
+        </a>
+        <a class="nav-link" routerLink="/" fragment="assistant">
+          {{ locale.t('landing.nav.assistant') }}
+        </a>
+      </nav>
+
+      <div class="nav-actions">
+        <button
+          class="language-btn"
+          type="button"
+          (click)="toggleLocale()"
+          [attr.aria-label]="locale.t('landing.a11y.switchLanguage')"
+        >
+          {{ locale.locale() === 'ar' ? 'EN' : 'AR' }}
+        </button>
+        <button
+          class="icon-btn"
+          type="button"
+          (click)="toggleTheme()"
+          [attr.aria-label]="
+            locale.t(
+              theme() === 'dark' ? 'landing.a11y.switchToLight' : 'landing.a11y.switchToDark'
+            )
+          "
+          [attr.title]="locale.t('landing.a11y.toggleTheme')"
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="4"></circle>
+            <path
+              d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"
+            ></path>
+          </svg>
+        </button>
+        <a class="btn btn-secondary desktop-auth" routerLink="/auth/login">
+          {{ locale.t('landing.nav.login') }}
+        </a>
+        <a class="btn btn-primary apply-button desktop-auth" routerLink="/applicant">
+          {{ locale.t('landing.nav.apply') }}
+        </a>
+        <button
+          class="icon-btn menu-btn"
+          type="button"
+          (click)="toggleMobileMenu()"
+          [attr.aria-label]="
+            locale.t(mobileMenuOpen() ? 'landing.a11y.closeMenu' : 'landing.a11y.openMenu')
+          "
+          [attr.aria-expanded]="mobileMenuOpen()"
+          aria-controls="landing-mobile-menu"
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            aria-hidden="true"
+          >
+            @if (mobileMenuOpen()) {
+              <path d="M6 6l12 12M18 6L6 18"></path>
+            } @else {
+              <path d="M4 7h16M4 12h16M4 17h16"></path>
+            }
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <aside
+    id="landing-mobile-menu"
+    class="mobile-menu"
+    [class.open]="mobileMenuOpen()"
+    [attr.aria-hidden]="!mobileMenuOpen()"
+    [attr.inert]="mobileMenuOpen() ? null : ''"
+  >
+    <nav [attr.aria-label]="locale.t('landing.a11y.mobileNavigation')">
+      <a class="nav-link" routerLink="/" fragment="programs" (click)="closeMobileMenu()">
+        {{ locale.t('landing.nav.programs') }}
+      </a>
+      <a class="nav-link" routerLink="/" fragment="tracks" (click)="closeMobileMenu()">
+        {{ locale.t('landing.nav.tracks') }}
+      </a>
+      <a class="nav-link" routerLink="/" fragment="eligibility" (click)="closeMobileMenu()">
+        {{ locale.t('landing.nav.eligibility') }}
+      </a>
+      <a class="nav-link" routerLink="/" fragment="process" (click)="closeMobileMenu()">
+        {{ locale.t('landing.nav.process') }}
+      </a>
+      <a class="nav-link" routerLink="/" fragment="assistant" (click)="closeMobileMenu()">
+        {{ locale.t('landing.nav.assistant') }}
+      </a>
+    </nav>
+    <div class="mobile-menu-actions">
+      <a class="btn btn-secondary" routerLink="/auth/login" (click)="closeMobileMenu()">
+        {{ locale.t('landing.nav.login') }}
+      </a>
+      <a
+        class="btn btn-primary apply-button"
+        routerLink="/"
+        fragment="programs"
+        (click)="closeMobileMenu()"
+      >
+        {{ locale.t('landing.nav.apply') }}
+      </a>
+    </div>
+  </aside>
+
+  <main id="top">
+    <section class="hero">
+      <div class="container hero-grid">
+        <div class="hero-copy-column">
+          <div class="hero-badge">
+            <span class="hero-badge-dot"></span>
+            <span>{{ locale.t('landing.programs.eyebrow') }}</span>
+          </div>
+          <h1>
+            {{ locale.t('landing.hero.titlePrefix') }}
+            <span class="accent">EduFlowAI.</span>
+          </h1>
+          <p class="hero-copy">{{ locale.t('landing.hero.copy') }}</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary apply-button" routerLink="/applicant">
+              <span>{{ locale.t('landing.nav.apply') }}</span>
+              <svg
+                class="directional-icon"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M5 12h14M13 6l6 6-6 6"></path>
+              </svg>
+            </a>
+            <a class="btn btn-secondary" routerLink="/" fragment="tracks">
+              {{ locale.t('landing.hero.exploreTracks') }}
+            </a>
+          </div>
+          <div class="trust-row">
+            <span class="trust-item">
+              <span class="trust-icon" aria-hidden="true">✓</span>
+              <span>{{ locale.t('landing.hero.trustOne') }}</span>
+            </span>
+            <span class="trust-item">
+              <span class="trust-icon" aria-hidden="true">✓</span>
+              <span>{{ locale.t('landing.hero.trustTwo') }}</span>
+            </span>
+            <span class="trust-item">
+              <span class="trust-icon" aria-hidden="true">✓</span>
+              <span>{{ locale.t('landing.hero.trustThree') }}</span>
+            </span>
+          </div>
+        </div>
+
+        <div class="hero-visual" [attr.aria-label]="locale.t('landing.a11y.heroPreview')">
+          <div class="visual-orbit" aria-hidden="true"></div>
+          <article class="portal-card">
+            <div class="portal-top">
+              <div class="portal-user">
+                <div class="avatar" aria-hidden="true">iti</div>
+                <div>
+                  <strong>{{ locale.t('landing.hero.workspace') }}</strong>
+                  <small>{{ locale.t('landing.hero.reference') }}</small>
+                </div>
+              </div>
+              <span class="status-pill">
+                <span aria-hidden="true">●</span>
+                <span>{{ locale.t('landing.hero.inProgress') }}</span>
+              </span>
+            </div>
+            <div class="portal-body">
+              <div class="progress-meta">
+                <span>{{ locale.t('landing.hero.progress') }}</span>
+                <strong>72%</strong>
+              </div>
+              <div class="progress-track" aria-hidden="true">
+                <div class="progress-fill"></div>
+              </div>
+              <div class="journey">
+                <div class="journey-item active">
+                  <span class="journey-icon" aria-hidden="true">
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                    >
+                      <path d="M4 20h16M6 20V8l6-4 6 4v12M9 12h6M9 16h6"></path>
+                    </svg>
+                  </span>
+                  <span class="journey-copy">
+                    <strong>{{ locale.t('landing.hero.profile') }}</strong>
+                    <small>{{ locale.t('landing.hero.profileState') }}</small>
+                  </span>
+                  <span class="journey-state">100%</span>
+                </div>
+                <div class="journey-item active">
+                  <span class="journey-icon" aria-hidden="true">
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                    >
+                      <path d="M7 3h7l4 4v14H7z"></path>
+                      <path d="M14 3v5h5M10 13h5M10 17h5"></path>
+                    </svg>
+                  </span>
+                  <span class="journey-copy">
+                    <strong>{{ locale.t('landing.hero.documents') }}</strong>
+                    <small>{{ locale.t('landing.hero.documentsState') }}</small>
+                  </span>
+                  <span class="journey-state">80%</span>
+                </div>
+                <div class="journey-item ai">
+                  <span class="journey-icon" aria-hidden="true">
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                    >
+                      <path
+                        d="M12 3l1.4 4.1L17.5 8.5l-4.1 1.4L12 14l-1.4-4.1-4.1-1.4 4.1-1.4z"
+                      ></path>
+                      <path d="M18.5 14l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"></path>
+                    </svg>
+                  </span>
+                  <span class="journey-copy">
+                    <strong>{{ locale.t('landing.hero.assistant') }}</strong>
+                    <small>{{ locale.t('landing.hero.assistantState') }}</small>
+                  </span>
+                  <span class="journey-state">
+                    {{ locale.t('landing.hero.optional') }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </article>
+          <div class="floating-card one">
+            <span class="mini-icon" aria-hidden="true">✓</span>
+            <span>{{ locale.t('landing.hero.eligibilityPassed') }}</span>
+          </div>
+          <div class="floating-card two">
+            <span class="mini-icon" aria-hidden="true">✦</span>
+            <span>{{ locale.t('landing.hero.aiNextSteps') }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div
+      class="container stats-wrap"
+      [attr.aria-label]="locale.t('landing.a11y.programHighlights')"
+    >
+      <div class="stats-strip">
+        <div class="stat">
+          <strong> 700K+ </strong>
+          <span>{{ locale.t('landing.stats.programs') }}</span>
+        </div>
+        <div class="stat">
+          <strong>30+</strong>
+          <span>{{ locale.t('landing.stats.tracks') }}</span>
+        </div>
+        <div class="stat">
+          <strong>20+</strong>
+          <span>{{ locale.t('landing.stats.locations') }}</span>
+        </div>
+        <div class="stat">
+          <strong>85%</strong>
+          <span>{{ locale.t('landing.stats.journey') }}</span>
+        </div>
+      </div>
+    </div>
+
+    <section class="section programs-section" id="programs">
+      <div class="container">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">
+              {{ locale.t('landing.programs.eyebrow') }}
+            </span>
+            <h2 class="section-title">
+              {{ locale.t('landing.programs.title') }}
+            </h2>
+          </div>
+          <p class="section-copy">{{ locale.t('landing.programs.copy') }}</p>
+        </div>
+
+        <div class="programs-grid">
+          @for (program of programs; track program.id) {
+            <article class="program-card">
+              <div class="program-card-body">
+                <div
+                  class="program-duration"
+                  [attr.aria-label]="
+                    program.durationMonths + ' ' + locale.t('landing.programs.months')
+                  "
+                >
+                  <strong>{{ program.durationMonths }}</strong>
+                  <span>{{ locale.t('landing.programs.months') }}</span>
+                </div>
+                <div class="program-content">
+                  <div class="program-card-head">
+                    <span class="program-code">{{ program.code }}</span>
+                  </div>
+                  <h3>{{ locale.t(program.nameKey) }}</h3>
+                  <p class="program-description">
+                    {{ locale.t(program.descriptionKey) }}
+                  </p>
+                </div>
+              </div>
+
+              <dl class="program-highlights">
+                @for (highlight of program.highlights; track highlight.labelKey) {
+                  <div class="program-highlight">
+                    <dt>{{ locale.t(highlight.labelKey) }}</dt>
+                    <dd>{{ locale.t(highlight.valueKey) }}</dd>
+                  </div>
+                }
+              </dl>
+
+              <details class="program-eligibility">
+                <summary>
+                  <span>{{ locale.t('landing.programs.whoCanApply') }}</span>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    aria-hidden="true"
+                  >
+                    <path d="M6 9l6 6 6-6"></path>
+                  </svg>
+                </summary>
+                <dl class="program-eligibility-list">
+                  @for (criterion of program.eligibility; track criterion.labelKey) {
+                    <div>
+                      <dt>{{ locale.t(criterion.labelKey) }}</dt>
+                      <dd>{{ locale.t(criterion.valueKey) }}</dd>
+                    </div>
+                  }
+                </dl>
+              </details>
+            </article>
+          }
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="eligibility">
+      <div class="container">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">
+              {{ locale.t('landing.eligibility.eyebrow') }}
+            </span>
+            <h2 class="section-title">
+              {{ locale.t('landing.eligibility.title') }}
+            </h2>
+          </div>
+          <p class="section-copy">
+            {{ locale.t('landing.eligibility.copy') }}
+          </p>
+        </div>
+        <div class="eligibility-grid">
+          <article class="eligibility-card">
+            <span class="card-icon" aria-hidden="true">
+              <svg
+                width="21"
+                height="21"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+              >
+                <circle cx="12" cy="12" r="9"></circle>
+                <path d="M3 12h18M12 3a15 15 0 010 18M12 3a15 15 0 000 18"></path>
+              </svg>
+            </span>
+            <h3>{{ locale.t('landing.eligibility.nationality') }}</h3>
+            <p>{{ locale.t('landing.eligibility.nationalityCopy') }}</p>
+          </article>
+          <article class="eligibility-card">
+            <span class="card-icon" aria-hidden="true">
+              <svg
+                width="21"
+                height="21"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+              >
+                <path d="M3 10l9-5 9 5-9 5z"></path>
+                <path d="M7 13v4c3 2 7 2 10 0v-4M21 10v6"></path>
+              </svg>
+            </span>
+            <h3>{{ locale.t('landing.eligibility.degree') }}</h3>
+            <p>{{ locale.t('landing.eligibility.degreeCopy') }}</p>
+          </article>
+          <article class="eligibility-card">
+            <span class="card-icon" aria-hidden="true">
+              <svg
+                width="21"
+                height="21"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+              >
+                <path d="M12 8v5l3 2"></path>
+                <circle cx="12" cy="12" r="9"></circle>
+                <path d="M7 3L4 6M17 3l3 3"></path>
+              </svg>
+            </span>
+            <h3>{{ locale.t('landing.eligibility.graduation') }}</h3>
+            <p>{{ locale.t('landing.eligibility.graduationCopy') }}</p>
+          </article>
+          <article class="eligibility-card">
+            <span class="card-icon" aria-hidden="true">
+              <svg
+                width="21"
+                height="21"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+              >
+                <path
+                  d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6-5.4-2.9-5.4 2.9 1-6-4.4-4.3 6.1-.9z"
+                ></path>
+              </svg>
+            </span>
+            <h3>{{ locale.t('landing.eligibility.grade') }}</h3>
+            <p>{{ locale.t('landing.eligibility.gradeCopy') }}</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section tracks-section" id="tracks">
+      <div class="container">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">{{ locale.t('landing.tracks.eyebrow') }}</span>
+            <h2 class="section-title">{{ locale.t('landing.tracks.title') }}</h2>
+          </div>
+          <p class="section-copy">{{ locale.t('landing.tracks.copy') }}</p>
+        </div>
+
+        <div class="explorer-toolbar">
+          <div
+            class="filters"
+            role="group"
+            [attr.aria-label]="locale.t('landing.a11y.filterTracks')"
+          >
+            @for (filter of trackFilters; track filter.value) {
+              <button
+                class="filter-btn"
+                type="button"
+                [class.active]="activeFilter() === filter.value"
+                [attr.aria-pressed]="activeFilter() === filter.value"
+                (click)="setActiveFilter(filter.value)"
+              >
+                {{ locale.t(filter.labelKey) }}
+              </button>
+            }
+          </div>
+          <label class="search-box">
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <circle cx="11" cy="11" r="7"></circle>
+              <path d="M20 20l-4-4"></path>
+            </svg>
+            <input
+              type="search"
+              [value]="trackSearch()"
+              (input)="updateTrackSearch($event)"
+              [placeholder]="locale.t('landing.tracks.search')"
+              [attr.aria-label]="locale.t('landing.tracks.search')"
+            />
+          </label>
+        </div>
+
+        @if (tracksLoading()) {
+          <div class="empty-state" role="status">
+            {{ locale.t('common.loading') }}
+          </div>
+        } @else if (tracksLoadFailed()) {
+          <div class="empty-state" role="alert">
+            {{ locale.t('common.unexpected') }}
+          </div>
+        } @else if (filteredTracks().length > 0) {
+          <div class="tracks-grid" id="landing-track-grid">
+            @for (track of visibleTracks(); track track.id) {
+              <article class="track-card">
+                <div class="track-top-line"></div>
+                <div class="track-main">
+                  <div class="track-head">
+                    <span class="track-symbol" aria-hidden="true">
+                      <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                      >
+                        <circle cx="6" cy="6" r="2"></circle>
+                        <circle cx="18" cy="6" r="2"></circle>
+                        <circle cx="12" cy="18" r="2"></circle>
+                        <path d="M8 7.2l3 8.2M16 7.2l-3 8.2M8 6h8"></path>
+                      </svg>
+                    </span>
+                    <span class="track-category">{{ track.category || '—' }}</span>
+                  </div>
+                  <h3>{{ track.name }}</h3>
+                  <p class="track-description">{{ track.description || '—' }}</p>
+                  <div class="track-meta">
+                    <span>▷ <b>{{ formatTotalHours(track) }}</b></span>
+                    <span>
+                      ⌖
+                      @if (availableBranchNames(track).length > 0) {
+                        {{ availableBranchNames(track).join(' · ') }}
+                      } @else {
+                        —
+                      }
+                    </span>
+                  </div>
+                  <div class="tag-row">
+                    @for (topic of track.prerequisiteTopics; track topic) {
+                      <span class="tag">{{ topic }}</span>
+                    }
+                  </div>
+                </div>
+              </article>
+            }
+          </div>
+
+          @if (canToggleTracks()) {
+            <div class="hero-actions" style="justify-content: center">
+              <button
+                class="btn btn-secondary"
+                type="button"
+                (click)="toggleTracks()"
+                [attr.aria-expanded]="tracksExpanded()"
+                aria-controls="landing-track-grid"
+              >
+                {{ trackExpansionLabel() }}
+              </button>
+            </div>
+          }
+        } @else {
+          <div class="empty-state" role="status">
+            {{ locale.t('landing.tracks.noResults') }}
+          </div>
+        }
+
+        <p class="tracks-note">
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M12 11v5M12 8h.01"></path>
+          </svg>
+          <span>{{ locale.t('landing.tracks.availabilityNote') }}</span>
+        </p>
+      </div>
+    </section>
+
+    <section class="section" id="process">
+      <div class="container">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">{{ locale.t('landing.process.eyebrow') }}</span>
+            <h2 class="section-title">{{ locale.t('landing.process.title') }}</h2>
+          </div>
+          <p class="section-copy">{{ locale.t('landing.process.copy') }}</p>
+        </div>
+        <div class="process-grid">
+          <article class="process-step">
+            <div class="step-number">01</div>
+            <div>
+              <h3>{{ locale.t('landing.process.stepOne') }}</h3>
+              <p>{{ locale.t('landing.process.stepOneCopy') }}</p>
+            </div>
+          </article>
+          <article class="process-step">
+            <div class="step-number">02</div>
+            <div>
+              <h3>{{ locale.t('landing.process.stepTwo') }}</h3>
+              <p>{{ locale.t('landing.process.stepTwoCopy') }}</p>
+            </div>
+          </article>
+          <article class="process-step ai">
+            <div class="step-number">03</div>
+            <div>
+              <h3>{{ locale.t('landing.process.stepThree') }}</h3>
+              <p>{{ locale.t('landing.process.stepThreeCopy') }}</p>
+            </div>
+          </article>
+          <article class="process-step">
+            <div class="step-number">04</div>
+            <div>
+              <h3>{{ locale.t('landing.process.stepFour') }}</h3>
+              <p>{{ locale.t('landing.process.stepFourCopy') }}</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-tight" id="assistant">
+      <div class="container">
+        <div class="assistant-panel">
+          <div class="assistant-copy">
+            <span class="ai-label"
+              ><span aria-hidden="true">✦</span> {{ locale.t('landing.assistant.label') }}</span
+            >
+            <h2>{{ locale.t('landing.assistant.title') }}</h2>
+            <p>{{ locale.t('landing.assistant.copy') }}</p>
+            <button
+              class="btn btn-amber"
+              type="button"
+              (click)="openAssistant()"
+            >
+              <span>{{ locale.t('landing.assistant.ask') }}</span>
+              <svg
+                class="directional-icon"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                aria-hidden="true"
+              >
+                <path d="M5 12h14M13 6l6 6-6 6"></path>
+              </svg>
+            </button>
+          </div>
+          <div class="assistant-demo">
+            <div class="chat-head">
+              <span class="chat-avatar" aria-hidden="true">✦</span>
+              <div>
+                <strong>{{ locale.t('landing.assistant.name') }}</strong>
+                <small>{{ locale.t('landing.assistant.online') }}</small>
+              </div>
+            </div>
+            <div class="message bot">{{ locale.t('landing.assistant.botMessage') }}</div>
+            <div class="message user">{{ locale.t('landing.assistant.userMessage') }}</div>
+            <div class="suggestions">
+              <button class="suggestion" type="button">
+                {{ locale.t('landing.assistant.compare') }}
+              </button>
+              <button class="suggestion" type="button">
+                {{ locale.t('landing.assistant.documents') }}
+              </button>
+              <button class="suggestion" type="button">
+                {{ locale.t('landing.assistant.eligibility') }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a
+            class="brand"
+            routerLink="/"
+            fragment="top"
+            [attr.aria-label]="locale.t('landing.a11y.home')"
+          >
+            <span class="brand-logo" aria-hidden="true">
+              <img
+                [src]="theme() === 'dark' ? '/edu-logo-light.png' : '/edu-logo-dark.png'"
+                alt=""
+                width="1536"
+                height="1024"
+              />
+            </span>
+            <span class="brand-icon" aria-hidden="true">
+              <img
+                [src]="theme() === 'dark' ? '/edu-icon-light.png' : '/edu-icon-dark.png'"
+                alt=""
+                width="1024"
+                height="1024"
+              />
+            </span>
+          </a>
+          <p class="footer-copy">{{ locale.t('landing.footer.copy') }}</p>
+        </div>
+        <div class="footer-col">
+          <h3>{{ locale.t('landing.footer.admission') }}</h3>
+          <div class="footer-links">
+            <a routerLink="/" fragment="programs">{{ locale.t('landing.nav.programs') }}</a>
+            <a routerLink="/" fragment="tracks">{{ locale.t('landing.nav.tracks') }}</a>
+            <a routerLink="/" fragment="eligibility">{{ locale.t('landing.nav.eligibility') }}</a>
+            <a routerLink="/" fragment="process">{{ locale.t('landing.nav.process') }}</a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h3>{{ locale.t('landing.footer.support') }}</h3>
+          <div class="footer-links">
+            <a routerLink="/" fragment="assistant">{{ locale.t('landing.nav.assistant') }}</a>
+            <a routerLink="/" fragment="top">{{ locale.t('landing.footer.faq') }}</a>
+            <a routerLink="/" fragment="top">{{ locale.t('landing.footer.contact') }}</a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h3>{{ locale.t('landing.footer.legal') }}</h3>
+          <div class="footer-links">
+            <a routerLink="/" fragment="top">{{ locale.t('landing.footer.privacy') }}</a>
+            <a routerLink="/" fragment="top">{{ locale.t('landing.footer.terms') }}</a>
+            <a routerLink="/" fragment="top">{{ locale.t('landing.footer.accessibility') }}</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>{{ locale.t('landing.footer.copyright') }}</span>
+        <span class="footer-status">
+          {{ locale.t('landing.programs.catalogFooter', { count: programs.length }) }}
+        </span>
+      </div>
+    </div>
+  </footer>
+
+ </div>

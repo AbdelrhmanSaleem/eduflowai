@@ -1,0 +1,230 @@
+.stats-wrap {
+  position: relative;
+  z-index: 4;
+  margin-top: -26px;
+}
+
+.stats-strip {
+  display: grid;
+  overflow: hidden;
+  grid-template-columns: repeat(4, 1fr);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+
+.stat {
+  position: relative;
+  padding: 25px 28px;
+}
+
+.stat + .stat::before {
+  position: absolute;
+  inset-block: 25%;
+  inset-inline-start: 0;
+  width: 1px;
+  background: var(--border);
+  content: '';
+}
+
+.stat strong {
+  display: block;
+  color: var(--heading);
+  font-size: 1.35rem;
+  letter-spacing: -0.025em;
+}
+
+.stat span {
+  color: var(--text-soft);
+  font-size: 0.8rem;
+}
+
+.programs-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.program-card {
+  position: relative;
+  display: flex;
+  overflow: hidden;
+  min-height: 338px;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.program-card::before {
+  position: absolute;
+  top: 0;
+  inset-inline: 0;
+  height: 5px;
+  background: var(--navy-700);
+  content: '';
+}
+
+.program-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-6px);
+}
+
+.program-card-body {
+  display: grid;
+  flex: 1;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 22px;
+  padding: 31px 26px 24px;
+}
+
+.program-duration {
+  display: grid;
+  width: 92px;
+  height: 104px;
+  align-content: center;
+  justify-items: center;
+  border: 1px solid color-mix(in srgb, var(--navy-600), transparent 78%);
+  border-radius: 18px;
+  background: var(--blue-100);
+  color: var(--navy-700);
+}
+
+[data-theme='dark'] .program-duration {
+  color: #c5ddf8;
+}
+
+.program-duration strong {
+  font-size: 2.15rem;
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+
+.program-duration span {
+  margin-top: 8px;
+  font-size: 0.67rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.program-content {
+  min-width: 0;
+}
+
+.program-card-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 13px;
+}
+
+.program-code {
+  color: var(--text-soft);
+  font-size: 0.7rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.program-card h3 {
+  margin: 0 0 10px;
+  color: var(--heading);
+  font-size: clamp(1.28rem, 2vw, 1.55rem);
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+.program-description {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+  line-height: 1.7;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.program-highlights {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0 26px 24px;
+}
+
+.program-highlight {
+  padding: 13px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-soft);
+}
+
+.program-highlight dt,
+.program-eligibility-list dt {
+  color: var(--text-soft);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.program-highlight dd {
+  margin: 4px 0 0;
+  color: var(--heading);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.program-eligibility {
+  border-top: 1px solid var(--border);
+}
+
+.program-eligibility summary {
+  display: flex;
+  min-height: 58px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 26px;
+  color: var(--heading);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+
+.program-eligibility summary::-webkit-details-marker {
+  display: none;
+}
+
+.program-eligibility summary svg {
+  flex: 0 0 auto;
+  transition: transform 0.2s ease;
+}
+
+.program-eligibility[open] summary svg {
+  transform: rotate(180deg);
+}
+
+.program-eligibility-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 20px;
+  margin: 0;
+  padding: 2px 26px 26px;
+}
+
+.program-eligibility-list dd {
+  margin: 3px 0 0;
+  color: var(--text);
+  font-size: 0.8rem;
+}

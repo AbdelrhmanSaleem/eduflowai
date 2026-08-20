@@ -1,0 +1,1034 @@
+<section class="profile-page" aria-labelledby="profile-title">
+  @if (store.isLoading() && !store.profile()) {
+    <div class="state-card" role="status">
+      <span
+        class="material-symbols-outlined state-icon animate-spin"
+        aria-hidden="true"
+      >
+        progress_activity
+      </span>
+      <p>{{ copy().loading }}</p>
+    </div>
+  } @else if (store.loadError() && !store.profile()) {
+    <div class="state-card state-card--error" role="alert">
+      <span class="material-symbols-outlined state-icon" aria-hidden="true">
+        cloud_off
+      </span>
+      <h1>{{ copy().loadErrorTitle }}</h1>
+      <p>{{ store.loadError() }}</p>
+      <button class="primary-button" type="button" (click)="retryLoad()">
+        <span class="material-symbols-outlined" aria-hidden="true">
+          refresh
+        </span>
+        {{ copy().retry }}
+      </button>
+    </div>
+  } @else if (store.profile(); as profile) {
+    <header class="page-heading">
+      <div>
+        <h1 id="profile-title">
+          {{ profile.isProfileLocked ? copy().lockedTitle : copy().title }}
+        </h1>
+        <p>
+          {{
+            profile.isProfileLocked
+              ? copy().lockedSubtitle
+              : copy().subtitle
+          }}
+        </p>
+      </div>
+
+      @if (profile.isComplete && !profile.isProfileLocked) {
+        <span class="complete-badge">
+          <span class="material-symbols-outlined" aria-hidden="true">
+            verified
+          </span>
+          {{ copy().complete }}
+        </span>
+      }
+    </header>
+
+    @if (profile.isProfileLocked) {
+      <div class="locked-banner" role="status">
+        <span class="material-symbols-outlined" aria-hidden="true">
+          info
+        </span>
+        <p>{{ copy().lockedBanner }}</p>
+      </div>
+    }
+
+    @if (store.savedAt()) {
+      <div class="feedback feedback--success" role="status">
+        <span class="material-symbols-outlined" aria-hidden="true">
+          check_circle
+        </span>
+        {{ copy().saved }}
+      </div>
+    }
+
+    @if (store.saveError()) {
+      <div class="feedback feedback--error" role="alert" tabindex="-1">
+        <span class="material-symbols-outlined" aria-hidden="true">
+          error
+        </span>
+        <div>
+          <strong>{{ copy().saveErrorTitle }}</strong>
+          <p>{{ store.saveError() }}</p>
+          @if (hasValidationErrors()) {
+            <p>{{ copy().validationSummary }}</p>
+          }
+        </div>
+      </div>
+    }
+
+    <form
+      class="profile-form"
+      [formGroup]="form"
+      (ngSubmit)="submit()"
+      novalidate
+    >
+      @if (!profile.isProfileLocked) {
+        <nav class="stepper" [attr.aria-label]="copy().stepsAriaLabel">
+          <div class="stepper-track" aria-hidden="true"></div>
+          @for (
+            step of steps();
+            track step.number
+          ) {
+            <button
+              type="button"
+              class="step"
+              [class.step--active]="currentStep() === step.number"
+              [class.step--complete]="currentStep() > step.number"
+              [attr.aria-current]="
+                currentStep() === step.number ? 'step' : null
+              "
+              (click)="goToStep(step.number)"
+            >
+              <span class="step__number">
+                @if (currentStep() > step.number) {
+                  <span
+                    class="material-symbols-outlined"
+                    aria-hidden="true"
+                  >
+                    check
+                  </span>
+                } @else {
+                  {{ step.number }}
+                }
+              </span>
+              <span class="step__label">{{ step.label }}</span>
+            </button>
+          }
+        </nav>
+
+        <div class="form-card">
+          @if (currentStep() === 1) {
+            <section aria-labelledby="personal-heading">
+              <div class="section-heading">
+                <span class="material-symbols-outlined" aria-hidden="true">
+                  badge
+                </span>
+                <h2 id="personal-heading">{{ copy().personalTitle }}</h2>
+              </div>
+
+              <div class="fields-grid">
+                <div class="field field--wide">
+                  <label for="full-name-en">
+                    {{ copy().fullNameEn }} <span aria-hidden="true">*</span>
+                  </label>
+                  <input
+                    id="full-name-en"
+                    type="text"
+                    formControlName="fullNameEn"
+                    autocomplete="name"
+                    [attr.aria-invalid]="
+                      fieldMessages('fullNameEn').length > 0
+                    "
+                  />
+                  @for (
+                    message of fieldMessages('fullNameEn');
+                    track message
+                  ) {
+                    <p class="field-error">{{ message }}</p>
+                  }
+                </div>
+
+                <div class="field field--wide">
+                  <label for="full-name-ar">
+                    {{ copy().fullNameAr }} <span aria-hidden="true">*</span>
+                  </label>
+                  <input
+                    id="full-name-ar"
+                    type="text"
+                    formControlName="fullNameAr"
+                    autocomplete="name"
+                    dir="rtl"
+                    [attr.aria-invalid]="
+                      fieldMessages('fullNameAr').length > 0
+                    "
+                  />
+                  @for (
+                    message of fieldMessages('fullNameAr');
+                    track message
+                  ) {
+                    <p class="field-error">{{ message }}</p>
+                  }
+                </div>
+
+                <div class="field">
+                  <label for="national-id">
+                    {{ copy().nationalId }} <span aria-hidden="true">*</span>
+                  </label>
+                  <input
+                    id="national-id"
+                    type="text"
+                    inputmode="numeric"
+                    maxlength="14"
+                    formControlName="nationalId"
+                    autocomplete="off"
+                    [attr.aria-invalid]="
+                      fieldMessages('nationalId').length > 0
+                    "
+                  />
+                  @for (
+                    message of fieldMessages('nationalId');
+                    track message
+                  ) {
+                    <p class="field-error">{{ message }}</p>
+                  }
+                </div>
+
+                <div class="field">
+                  <label for="nationality">
+                    {{ copy().nationality }} <span aria-hidden="true">*</span>
+                  </label>
+                  <select id="nationality" formControlName="nationality">
+                    <option value="EGY">{{ copy().egyptian }}</option>
+                  </select>
+                  @for (
+                    message of fieldMessages('nationality');
+                    track message
+                  ) {
+                    <p class="field-error">{{ message }}</p>
+                  }
+                </div>
+
+                <div class="field">
+                  <label for="date-of-birth">
+                    {{ copy().dateOfBirth }} <span aria-hidden="true">*</span>
+                  </label>
+                  <input
+                    id="date-of-birth"
+                    type="date"
+                    formControlName="dateOfBirth"
+                    [max]="maximumBirthDate"
+                    [attr.aria-invalid]="
+                      fieldMessages('dateOfBirth').length > 0
+                    "
+                  />
+                  @for (
+                    message of fieldMessages('dateOfBirth');
+                    track message
+                  ) {
+                    <p class="field-error">{{ message }}</p>
+                  }
+                </div>
+
+                <fieldset class="field radio-field">
+                  <legend>
+                    {{ copy().gender }} <span aria-hidden="true">*</span>
+                  </legend>
+                  <div class="radio-options">
+                    <label>
+                      <input
+                        type="radio"
+                        formControlName="gender"
+                        value="Male"
+                      />
+                      {{ copy().male }}
+                    </label>
+                    <label>
+                      <input
+                        type="radio"
+                        formControlName="gender"
+                        value="Female"
+                      />
+                      {{ copy().female }}
+                    </label>
+                  </div>
+                  @for (
+                    message of fieldMessages('gender');
+                    track message
+                  ) {
+                    <p class="field-error">{{ message }}</p>
+                  }
+                </fieldset>
+
+                @if (form.controls.gender.value === 'Male') {
+                  <div class="military-panel field--wide">
+                    <div class="military-panel__heading">
+                      <span
+                        class="material-symbols-outlined"
+                        aria-hidden="true"
+                      >
+                        military_tech
+                      </span>
+                      <div>
+                        <strong>{{ copy().militaryStatus }}</strong>
+                        <p>{{ copy().visibleForMales }}</p>
+                      </div>
+                    </div>
+                    <div class="field">
+                      <label for="military-status">
+                        {{ copy().militaryStatus }}
+                        <span aria-hidden="true">*</span>
+                      </label>
+                      <select
+                        id="military-status"
+                        formControlName="militaryStatus"
+                      >
+                        <option value="">{{ copy().selectOption }}</option>
+                        @for (
+                          status of militaryStatuses;
+                          track status
+                        ) {
+                          <option [value]="status">
+                            {{ militaryLabel(status) }}
+                          </option>
+                        }
+                      </select>
+                      @for (
+                        message of fieldMessages('militaryStatus');
+                        track message
+                      ) {
+                        <p class="field-error">{{ message }}</p>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            </section>
+          }
+
+          @if (currentStep() === 2) {
+            <section aria-labelledby="contact-heading">
+              <div class="section-heading">
+                <span class="material-symbols-outlined" aria-hidden="true">
+                  contact_phone
+                </span>
+                <h2 id="contact-heading">{{ copy().contactTitle }}</h2>
+              </div>
+
+              <div class="fields-grid">
+                <div class="field">
+                  <label for="phone-number">{{ copy().phoneNumber }}</label>
+                  <input
+                    id="phone-number"
+                    type="tel"
+                    formControlName="phoneNumber"
+                    autocomplete="tel"
+                    placeholder="+20 100 000 0000"
+                    dir="ltr"
+                    [attr.aria-invalid]="
+                      fieldMessages('phoneNumber').length > 0
+                    "
+                  />
+                  @for (
+                    message of fieldMessages('phoneNumber');
+                    track message
+                  ) {
+                    <p class="field-error">{{ message }}</p>
+                  }
+                </div>
+
+                <div class="field">
+                  <label for="governorate">{{ copy().governorate }}</label>
+                  <input
+                    id="governorate"
+                    type="text"
+                    formControlName="governorate"
+                    autocomplete="address-level1"
+                    [attr.aria-invalid]="
+                      fieldMessages('governorate').length > 0
+                    "
+                  />
+                  @for (
+                    message of fieldMessages('governorate');
+                    track message
+                  ) {
+                    <p class="field-error">{{ message }}</p>
+                  }
+                </div>
+
+                <div class="field field--wide">
+                  <label for="address">{{ copy().address }}</label>
+                  <textarea
+                    id="address"
+                    rows="3"
+                    formControlName="address"
+                    autocomplete="street-address"
+                    [attr.aria-invalid]="
+                      fieldMessages('address').length > 0
+                    "
+                  ></textarea>
+                  @for (
+                    message of fieldMessages('address');
+                    track message
+                  ) {
+                    <p class="field-error">{{ message }}</p>
+                  }
+                </div>
+
+                <div class="field">
+                  <label for="preferred-language">
+                    {{ copy().preferredLanguage }}
+                    <span aria-hidden="true">*</span>
+                  </label>
+                  <select
+                    id="preferred-language"
+                    formControlName="preferredLanguage"
+                  >
+                    <option value="en">{{ copy().english }}</option>
+                    <option value="ar">{{ copy().arabic }}</option>
+                  </select>
+                </div>
+
+                <label class="notification-card">
+                  <input
+                    type="checkbox"
+                    formControlName="gmailNotificationsEnabled"
+                  />
+                  <span
+                    class="material-symbols-outlined notification-card__icon"
+                    aria-hidden="true"
+                  >
+                    mail
+                  </span>
+                  <span>
+                    <strong>{{ copy().gmailNotifications }}</strong>
+                    <small>{{ copy().gmailHint }}</small>
+                  </span>
+                </label>
+              </div>
+            </section>
+          }
+
+          @if (currentStep() === 3) {
+            <section aria-labelledby="academic-heading">
+              <div class="section-heading">
+                <span class="material-symbols-outlined" aria-hidden="true">
+                  school
+                </span>
+                <h2 id="academic-heading">{{ copy().academicTitle }}</h2>
+              </div>
+
+              <div class="fields-grid">
+                <div class="field">
+                  <label for="university">
+                    {{ copy().university }} <span aria-hidden="true">*</span>
+                  </label>
+                  <select
+                    id="university"
+                    formControlName="university"
+                    [attr.aria-invalid]="
+                      fieldMessages('university').length > 0
+                    "
+                  >
+                    <option value="" disabled>{{ copy().selectOption }}</option>
+                    @if (
+                      hasUnlistedAcademicOption(
+                        universities,
+                        form.controls.university.value
+                      )
+                    ) {
+                      <option [value]="form.controls.university.value">
+                        {{ form.controls.university.value }}
+                      </option>
+                    }
+                    @for (option of universities; track option.value) {
+                      <option [value]="option.value">
+                        {{ academicOptionLabel(option) }}
+                      </option>
+                    }
+                  </select>
+                  @for (
+                    message of fieldMessages('university');
+                    track message
+                  ) {
+                    <p class="field-error">{{ message }}</p>
+                  }
+                </div>
+
+                <div class="field">
+                  <label for="faculty">
+                    {{ copy().faculty }} <span aria-hidden="true">*</span>
+                  </label>
+                  <select
+                    id="faculty"
+                    formControlName="faculty"
+                    [attr.aria-invalid]="
+                      fieldMessages('faculty').length > 0
+                    "
+                  >
+                    <option value="" disabled>{{ copy().selectOption }}</option>
+                    @if (
+                      hasUnlistedAcademicOption(
+                        faculties,
+                        form.controls.faculty.value
+                      )
+                    ) {
+                      <option [value]="form.controls.faculty.value">
+                        {{ form.controls.faculty.value }}
+                      </option>
+                    }
+                    @for (option of faculties; track option.value) {
+                      <option [value]="option.value">
+                        {{ academicOptionLabel(option) }}
+                      </option>
+                    }
+                  </select>
+                  @for (
+                    message of fieldMessages('faculty');
+                    track message
+                  ) {
+                    <p class="field-error">{{ message }}</p>
+                  }
+                </div>
+
+                <div class="field">
+                  <label for="degree-level">
+                    {{ copy().degreeLevel }} <span aria-hidden="true">*</span>
+                  </label>
+                  <select
+                    id="degree-level"
+                    formControlName="degreeLevel"
+                    [attr.aria-invalid]="
+                      fieldMessages('degreeLevel').length > 0
+                    "
+                  >
+                    <option value="" disabled>{{ copy().selectOption }}</option>
+                    @if (
+                      hasUnlistedAcademicOption(
+                        degreeLevels,
+                        form.controls.degreeLevel.value
+                      )
+                    ) {
+                      <option [value]="form.controls.degreeLevel.value">
+                        {{ form.controls.degreeLevel.value }}
+                      </option>
+                    }
+                    @for (option of degreeLevels; track option.value) {
+                      <option [value]="option.value">
+                        {{ academicOptionLabel(option) }}
+                      </option>
+                    }
+                  </select>
+                  @for (
+                    message of fieldMessages('degreeLevel');
+                    track message
+                  ) {
+                    <p class="field-error">{{ message }}</p>
+                  }
+                </div>
+
+                <div class="field">
+                  <label for="major">
+                    {{ copy().major }} <span aria-hidden="true">*</span>
+                  </label>
+                  <select
+                    id="major"
+                    formControlName="major"
+                    [attr.aria-invalid]="
+                      fieldMessages('major').length > 0
+                    "
+                  >
+                    <option value="" disabled>{{ copy().selectOption }}</option>
+                    @if (
+                      hasUnlistedAcademicOption(
+                        majors,
+                        form.controls.major.value
+                      )
+                    ) {
+                      <option [value]="form.controls.major.value">
+                        {{ form.controls.major.value }}
+                      </option>
+                    }
+                    @for (option of majors; track option.value) {
+                      <option [value]="option.value">
+                        {{ academicOptionLabel(option) }}
+                      </option>
+                    }
+                  </select>
+                  @for (
+                    message of fieldMessages('major');
+                    track message
+                  ) {
+                    <p class="field-error">{{ message }}</p>
+                  }
+                </div>
+
+                <div class="field">
+                  <label for="graduation-year">
+                    {{ copy().graduationYear }}
+                    <span aria-hidden="true">*</span>
+                  </label>
+                  <input
+                    id="graduation-year"
+                    type="number"
+                    min="1900"
+                    [max]="currentYear"
+                    formControlName="graduationYear"
+                    inputmode="numeric"
+                    [attr.aria-invalid]="
+                      fieldMessages('graduationYear').length > 0
+                    "
+                  />
+                  @for (
+                    message of fieldMessages('graduationYear');
+                    track message
+                  ) {
+                    <p class="field-error">{{ message }}</p>
+                  }
+                </div>
+
+                <div class="field">
+                  <label for="cumulative-grade">
+                    {{ copy().cumulativeGrade }}
+                    <span aria-hidden="true">*</span>
+                  </label>
+                  <select
+                    id="cumulative-grade"
+                    formControlName="cumulativeGrade"
+                    [attr.aria-invalid]="
+                      fieldMessages('cumulativeGrade').length > 0
+                    "
+                  >
+                    <option value="">{{ copy().selectOption }}</option>
+                    @for (grade of grades; track grade) {
+                      <option [value]="grade">{{ gradeLabel(grade) }}</option>
+                    }
+                  </select>
+                  @for (
+                    message of fieldMessages('cumulativeGrade');
+                    track message
+                  ) {
+                    <p class="field-error">{{ message }}</p>
+                  }
+                </div>
+              </div>
+            </section>
+          }
+
+          <div class="form-actions">
+            @if (currentStep() > 1) {
+              <button
+                class="secondary-button"
+                type="button"
+                (click)="previousStep()"
+              >
+                <span class="material-symbols-outlined" aria-hidden="true">
+                  arrow_back
+                </span>
+                {{ copy().back }}
+              </button>
+            }
+
+            @if (currentStep() < 3) {
+              <button
+                class="primary-button action-at-end"
+                type="button"
+                (click)="nextStep()"
+              >
+                {{ copy().next }}
+                <span class="material-symbols-outlined" aria-hidden="true">
+                  arrow_forward
+                </span>
+              </button>
+            } @else {
+              <button
+                class="primary-button action-at-end"
+                type="submit"
+                [disabled]="store.isSaving()"
+              >
+                @if (store.isSaving()) {
+                  <span
+                    class="material-symbols-outlined animate-spin"
+                    aria-hidden="true"
+                  >
+                    progress_activity
+                  </span>
+                  {{ copy().saving }}
+                } @else {
+                  <span class="material-symbols-outlined" aria-hidden="true">
+                    save
+                  </span>
+                  {{ copy().save }}
+                }
+              </button>
+            }
+          </div>
+        </div>
+      } @else {
+        <div class="locked-grid">
+          <section class="locked-card locked-card--personal">
+            <div class="section-heading">
+              <span class="material-symbols-outlined" aria-hidden="true">
+                person_outline
+              </span>
+              <h2>{{ copy().personalTitle }}</h2>
+            </div>
+            <div class="fields-grid">
+              <div class="field field--wide">
+                <label for="locked-name-en">
+                  {{ copy().fullNameEn }}
+                  <span class="lock-label">
+                    <span
+                      class="material-symbols-outlined"
+                      aria-hidden="true"
+                    >
+                      lock
+                    </span>
+                    {{ copy().lockedHint }}
+                  </span>
+                </label>
+                <input
+                  id="locked-name-en"
+                  type="text"
+                  formControlName="fullNameEn"
+                />
+              </div>
+              <div class="field field--wide">
+                <label for="locked-name-ar">
+                  {{ copy().fullNameAr }}
+                  <span class="lock-label">
+                    <span
+                      class="material-symbols-outlined"
+                      aria-hidden="true"
+                    >
+                      lock
+                    </span>
+                    {{ copy().lockedHint }}
+                  </span>
+                </label>
+                <input
+                  id="locked-name-ar"
+                  type="text"
+                  formControlName="fullNameAr"
+                  dir="rtl"
+                />
+              </div>
+              <div class="field">
+                <label for="locked-national-id">
+                  {{ copy().nationalId }}
+                  <span
+                    class="material-symbols-outlined inline-lock"
+                    aria-hidden="true"
+                  >
+                    lock
+                  </span>
+                </label>
+                <input
+                  id="locked-national-id"
+                  type="text"
+                  formControlName="nationalId"
+                />
+              </div>
+              <div class="field">
+                <label for="locked-nationality">
+                  {{ copy().nationality }}
+                  <span
+                    class="material-symbols-outlined inline-lock"
+                    aria-hidden="true"
+                  >
+                    lock
+                  </span>
+                </label>
+                <select id="locked-nationality" formControlName="nationality">
+                  <option value="EGY">{{ copy().egyptian }}</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="locked-birth-date">
+                  {{ copy().dateOfBirth }}
+                  <span
+                    class="material-symbols-outlined inline-lock"
+                    aria-hidden="true"
+                  >
+                    lock
+                  </span>
+                </label>
+                <input
+                  id="locked-birth-date"
+                  type="date"
+                  formControlName="dateOfBirth"
+                />
+              </div>
+              <div class="field">
+                <label for="locked-gender">
+                  {{ copy().gender }}
+                  <span
+                    class="material-symbols-outlined inline-lock"
+                    aria-hidden="true"
+                  >
+                    lock
+                  </span>
+                </label>
+                <select id="locked-gender" formControlName="gender">
+                  <option value="Male">{{ copy().male }}</option>
+                  <option value="Female">{{ copy().female }}</option>
+                </select>
+              </div>
+              @if (form.getRawValue().gender === 'Male') {
+                <div class="field field--wide">
+                  <label for="locked-military">
+                    {{ copy().militaryStatus }}
+                    <span
+                      class="material-symbols-outlined inline-lock"
+                      aria-hidden="true"
+                    >
+                      lock
+                    </span>
+                  </label>
+                  <select
+                    id="locked-military"
+                    formControlName="militaryStatus"
+                  >
+                    @for (status of militaryStatuses; track status) {
+                      <option [value]="status">
+                        {{ militaryLabel(status) }}
+                      </option>
+                    }
+                  </select>
+                </div>
+              }
+            </div>
+          </section>
+
+          <section class="locked-card locked-card--contact">
+            <div class="section-heading">
+              <span class="material-symbols-outlined" aria-hidden="true">
+                contact_phone
+              </span>
+              <h2>{{ copy().contactTitle }}</h2>
+            </div>
+            <div class="fields-grid">
+              <div class="field">
+                <label for="locked-phone">{{ copy().phoneNumber }}</label>
+                <input
+                  id="locked-phone"
+                  type="tel"
+                  formControlName="phoneNumber"
+                  autocomplete="tel"
+                  dir="ltr"
+                  [attr.aria-invalid]="
+                    fieldMessages('phoneNumber').length > 0
+                  "
+                />
+                @for (
+                  message of fieldMessages('phoneNumber');
+                  track message
+                ) {
+                  <p class="field-error">{{ message }}</p>
+                }
+              </div>
+              <div class="field">
+                <label for="locked-governorate">
+                  {{ copy().governorate }}
+                </label>
+                <input
+                  id="locked-governorate"
+                  type="text"
+                  formControlName="governorate"
+                  autocomplete="address-level1"
+                  [attr.aria-invalid]="
+                    fieldMessages('governorate').length > 0
+                  "
+                />
+                @for (
+                  message of fieldMessages('governorate');
+                  track message
+                ) {
+                  <p class="field-error">{{ message }}</p>
+                }
+              </div>
+              <div class="field field--wide">
+                <label for="locked-address">{{ copy().address }}</label>
+                <textarea
+                  id="locked-address"
+                  rows="3"
+                  formControlName="address"
+                  autocomplete="street-address"
+                  [attr.aria-invalid]="fieldMessages('address').length > 0"
+                ></textarea>
+                @for (
+                  message of fieldMessages('address');
+                  track message
+                ) {
+                  <p class="field-error">{{ message }}</p>
+                }
+              </div>
+              <div class="field">
+                <label for="locked-language">
+                  {{ copy().preferredLanguage }}
+                </label>
+                <select
+                  id="locked-language"
+                  formControlName="preferredLanguage"
+                >
+                  <option value="en">{{ copy().english }}</option>
+                  <option value="ar">{{ copy().arabic }}</option>
+                </select>
+              </div>
+              <label class="notification-card">
+                <input
+                  type="checkbox"
+                  formControlName="gmailNotificationsEnabled"
+                />
+                <span
+                  class="material-symbols-outlined notification-card__icon"
+                  aria-hidden="true"
+                >
+                  mail
+                </span>
+                <span>
+                  <strong>{{ copy().gmailNotifications }}</strong>
+                  <small>{{ copy().gmailHint }}</small>
+                </span>
+              </label>
+            </div>
+          </section>
+
+          <section class="locked-card locked-card--academic">
+            <div class="section-heading">
+              <span class="material-symbols-outlined" aria-hidden="true">
+                school
+              </span>
+              <h2>{{ copy().academicTitle }}</h2>
+            </div>
+            <div class="fields-grid">
+              <div class="field">
+                <label for="locked-university">
+                  {{ copy().university }}
+                  <span
+                    class="material-symbols-outlined inline-lock"
+                    aria-hidden="true"
+                  >
+                    lock
+                  </span>
+                </label>
+                <input
+                  id="locked-university"
+                  type="text"
+                  formControlName="university"
+                />
+              </div>
+              <div class="field">
+                <label for="locked-faculty">
+                  {{ copy().faculty }}
+                  <span
+                    class="material-symbols-outlined inline-lock"
+                    aria-hidden="true"
+                  >
+                    lock
+                  </span>
+                </label>
+                <input
+                  id="locked-faculty"
+                  type="text"
+                  formControlName="faculty"
+                />
+              </div>
+              <div class="field">
+                <label for="locked-degree">
+                  {{ copy().degreeLevel }}
+                  <span
+                    class="material-symbols-outlined inline-lock"
+                    aria-hidden="true"
+                  >
+                    lock
+                  </span>
+                </label>
+                <input
+                  id="locked-degree"
+                  type="text"
+                  formControlName="degreeLevel"
+                />
+              </div>
+              <div class="field">
+                <label for="locked-major">
+                  {{ copy().major }}
+                  <span
+                    class="material-symbols-outlined inline-lock"
+                    aria-hidden="true"
+                  >
+                    lock
+                  </span>
+                </label>
+                <input
+                  id="locked-major"
+                  type="text"
+                  formControlName="major"
+                />
+              </div>
+              <div class="field">
+                <label for="locked-year">
+                  {{ copy().graduationYear }}
+                  <span
+                    class="material-symbols-outlined inline-lock"
+                    aria-hidden="true"
+                  >
+                    lock
+                  </span>
+                </label>
+                <input
+                  id="locked-year"
+                  type="number"
+                  formControlName="graduationYear"
+                />
+              </div>
+              <div class="field">
+                <label for="locked-grade">
+                  {{ copy().cumulativeGrade }}
+                  <span
+                    class="material-symbols-outlined inline-lock"
+                    aria-hidden="true"
+                  >
+                    lock
+                  </span>
+                </label>
+                <select id="locked-grade" formControlName="cumulativeGrade">
+                  @for (grade of grades; track grade) {
+                    <option [value]="grade">{{ gradeLabel(grade) }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div class="locked-actions">
+          <button
+            class="primary-button"
+            type="submit"
+            [disabled]="store.isSaving()"
+          >
+            @if (store.isSaving()) {
+              <span
+                class="material-symbols-outlined animate-spin"
+                aria-hidden="true"
+              >
+                progress_activity
+              </span>
+              {{ copy().saving }}
+            } @else {
+              <span class="material-symbols-outlined" aria-hidden="true">
+                save
+              </span>
+              {{ copy().saveEditable }}
+            }
+          </button>
+        </div>
+      }
+    </form>
+  }
+</section>

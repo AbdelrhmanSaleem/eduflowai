@@ -1,0 +1,111 @@
+<div class="flex-1 p-4 md:p-margin-page max-w-container-max mx-auto w-full">
+    <!-- Header Section -->
+    <div class="mb-8">
+        <h2 class="font-headline-xl text-headline-xl text-on-background mb-2">Enrollment Checklist</h2>
+        <p class="font-body-lg text-body-lg text-on-surface-variant">Welcome! Complete the steps below to finish your enrollment.</p>
+    </div>
+
+    <!-- Loading State -->
+    @if (store.isLoadingChecklist()) {
+        <div class="flex justify-center items-center py-12">
+            <span class="material-symbols-outlined animate-spin text-4xl text-primary">progress_activity</span>
+            <span class="ml-3 font-body-md text-on-surface-variant">Loading your checklist...</span>
+        </div>
+    }
+
+    <!-- Error State -->
+    @else if (store.error()) {
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+            <span class="block sm:inline">{{ store.error() }}</span>
+        </div>
+    }
+
+    <!-- Main Content -->
+    @else if (store.enrollmentChecklist(); as checklist) {
+        <!-- Progress Bar Section -->
+        <div class="bg-surface-container-lowest rounded-xl p-6 border border-outline-variant shadow-[0_4px_6px_-1px_rgba(0,0,0,0.04),0_2px_4px_-1px_rgba(0,0,0,0.02)] mb-8">
+            <div class="flex justify-between items-end mb-3">
+                <span class="font-label-md text-label-md text-on-surface-variant">Overall Progress</span>
+                <span class="font-label-md text-label-md text-primary font-bold">
+                    {{ checklist.completedTasksCount }} of {{ checklist.totalTasksCount }} tasks completed
+                </span>
+            </div>
+            <div class="h-2 w-full bg-slate-200 rounded-full overflow-hidden">
+                <div class="h-full bg-primary rounded-full transition-all duration-500" 
+                     [style.width.%]="getProgressPercentage(checklist.completedTasksCount, checklist.totalTasksCount)"></div>
+            </div>
+        </div>
+
+        <!-- Checklist Tasks List -->
+        <div class="flex flex-col gap-4">
+            @for (task of checklist.tasks; track task.id) {
+                
+                <!-- Dynamic Card based on Task Status -->
+                <div class="bg-surface-container-lowest border rounded-lg p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all"
+                     [ngClass]="{
+                        'border-outline-variant opacity-75': task.status === 'Completed',
+                        'border-[#B7791F]/30 shadow-sm': task.status === 'UnderReview',
+                        'border-outline-variant shadow-sm': task.status === 'Pending' || task.status === 'Failed'
+                     }">
+                    
+                    <div class="flex items-center gap-4">
+                        <!-- Dynamic Icon -->
+                        @if (task.status === 'Completed') {
+                            <span class="material-symbols-outlined text-[#065F46] text-3xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                        } @else if (task.status === 'UnderReview') {
+                            <span class="material-symbols-outlined text-[#B7791F] text-3xl animate-spin" style="font-variation-settings: 'FILL' 0;">progress_activity</span>
+                        } @else if (task.status === 'Failed') {
+                            <span class="material-symbols-outlined text-error text-3xl" style="font-variation-settings: 'FILL' 1;">error</span>
+                        } @else {
+                            <!-- Pending state -->
+                            <span class="material-symbols-outlined text-outline text-3xl" style="font-variation-settings: 'FILL' 0;">radio_button_unchecked</span>
+                        }
+                        
+                        <!-- Task Details -->
+                        <div>
+                            <h3 class="font-headline-md text-headline-md text-on-background"
+                                [class.line-through]="task.status === 'Completed'"
+                                [class.decoration-outline-variant]="task.status === 'Completed'">
+                                {{ task.title }}
+                            </h3>
+                            
+                            <div class="flex items-center gap-2 mt-1">
+                                <!-- Status Badge -->
+                                @if (task.status === 'Completed') {
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[#D1FAE5] text-[#065F46] border border-[#065F46]/20">Completed</span>
+                                } @else if (task.status === 'UnderReview') {
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[#FEF3C7] text-[#92400E] border border-[#92400E]/20">Under Review</span>
+                                } @else if (task.status === 'Failed') {
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-error-container text-on-error-container border border-error/20">Action Required</span>
+                                } @else {
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">Pending</span>
+                                }
+                                
+                                <!-- Subtext Message -->
+                                @if (task.subtextMessage) {
+                                    <span class="font-body-sm text-body-sm text-on-surface-variant">{{ task.subtextMessage }}</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Button (Only show if there's an actionUrl and task is not completed) -->
+                    @if (task.actionUrl && task.status !== 'Completed') {
+                        <a [href]="task.actionUrl" target="_blank"
+                           class="px-4 py-2 border border-primary text-primary font-label-md text-label-md rounded hover:bg-surface-container-low transition-colors active:scale-95 shrink-0 self-start sm:self-center text-center">
+                            {{ task.taskType === 'Payment' ? 'Pay Now' : 'Complete Task' }}
+                        </a>
+                    }
+                </div>
+            }
+
+            <!-- Empty State if no tasks exist -->
+            @if (checklist.tasks.length === 0) {
+                <div class="text-center py-10 bg-surface rounded-lg border border-outline-variant border-dashed">
+                    <span class="material-symbols-outlined text-outline text-4xl mb-2">fact_check</span>
+                    <p class="font-body-md text-on-surface-variant">No enrollment tasks found for your application.</p>
+                </div>
+            }
+        </div>
+    }
+</div>

@@ -1,0 +1,46 @@
+<div class="flex items-center min-w-[1000px] justify-between relative px-4 mt-8 mb-8" dir="ltr">
+  
+    <!-- Background Line -->
+    <div class="absolute left-8 right-8 top-1/2 -translate-y-1/2 h-0.5 bg-surface-container-high z-0"></div>
+
+    <!-- Dynamic Progress Line based on timelineProgressPercentage -->
+    <div class="absolute left-8 top-1/2 -translate-y-1/2 h-0.5 bg-primary z-0 transition-all duration-500 ease-in-out" 
+            [style.width.%]="summary().timelineProgressPercentage || 0"></div>
+
+    <!-- Loop through the 7 dynamic steps -->
+    @for(step of steps(); track step.id){
+        <div class="relative z-10 flex flex-col items-center gap-2 w-24">
+        
+        <!-- The icon circle with dynamic styling based on state -->
+        <div class="w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all duration-300"
+                [ngClass]="{
+                'bg-emerald-100 border-emerald-500 text-emerald-600': step.state === 'Passed',
+                'bg-primary border-primary text-on-primary': step.state === 'InProgress',
+                'bg-error-container border-error text-error': step.state === 'Failed',
+                'bg-surface border-outline-variant text-outline': step.state === 'Pending'
+                }">
+            <span class="material-symbols-outlined text-[18px]" [class.animate-pulse]="step.state === 'InProgress'">
+            {{ step.icon }}
+            </span>
+        </div>
+
+        <!-- Text labels below the circle -->
+        <div class="text-center">
+            <p class="font-label-sm text-label-sm" 
+                [ngClass]="step.state === 'Pending' ? 'text-on-surface-variant' : 'text-on-surface'">
+                {{ step.labelEn }}
+            </p>
+            <p class="text-[10px] font-medium mt-0.5"
+                [ngClass]="{
+                'text-emerald-600': step.state === 'Passed',
+                'text-primary': step.state === 'InProgress',
+                'text-error': step.state === 'Failed',
+                'text-outline': step.state === 'Pending'
+                }">
+            {{ step.state === 'InProgress' ? 'In Progress' : step.state }}
+            </p>
+        </div>
+
+        </div>
+    }
+</div>

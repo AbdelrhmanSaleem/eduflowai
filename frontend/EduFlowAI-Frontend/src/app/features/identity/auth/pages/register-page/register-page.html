@@ -1,0 +1,210 @@
+<main class="auth-shell" aria-labelledby="register-title">
+  <header class="auth-brand">
+    <h1 id="register-title">{{ copy.t('brand') }}</h1>
+    <p>{{ copy.t('createAccount') }}</p>
+  </header>
+
+  <section class="auth-card">
+    @if (result(); as registration) {
+      <div class="status-card" role="status">
+        <div class="status-icon status-icon--success">
+          <span class="material-symbols-outlined" aria-hidden="true">
+            mark_email_read
+          </span>
+        </div>
+        <h2>{{ copy.t('registrationSuccess') }}</h2>
+        <p>
+          {{ copy.t('registrationSuccessBody') }}
+          <strong>{{ registration.email }}</strong>
+        </p>
+
+        @if (confirmationQueryParams(); as developmentParams) {
+          <div class="development-action">
+            <strong>{{ copy.t('developmentOnly') }}</strong>
+            <a
+              class="auth-button auth-button--secondary"
+              routerLink="/auth/confirm-email"
+              [queryParams]="developmentParams"
+            >
+              {{ copy.t('confirmUsingToken') }}
+            </a>
+          </div>
+        }
+
+        <a class="auth-button" routerLink="/auth/login">
+          {{ copy.t('backToLogin') }}
+        </a>
+      </div>
+    } @else {
+      @if (serverError(); as errorKey) {
+        <div class="banner banner--error" role="alert">
+          <span class="material-symbols-outlined" aria-hidden="true">error</span>
+          <p>{{ copy.t(errorKey) }}</p>
+        </div>
+      }
+
+      <form
+        class="auth-form"
+        [formGroup]="form"
+        (ngSubmit)="submit()"
+        novalidate
+      >
+        <div class="field">
+          <label for="register-email">{{ copy.t('email') }}</label>
+          <div class="field__control field__control--plain">
+            <input
+              id="register-email"
+              type="email"
+              formControlName="email"
+              autocomplete="email"
+              maxlength="256"
+              [placeholder]="copy.t('emailPlaceholder')"
+              [attr.aria-invalid]="
+                form.controls.email.touched && form.controls.email.invalid
+              "
+              aria-describedby="register-email-error"
+            />
+          </div>
+          @if (form.controls.email.touched && form.controls.email.invalid) {
+            <p id="register-email-error" class="field-error">
+              {{
+                form.controls.email.hasError('required')
+                  ? copy.t('required')
+                  : copy.t('invalidEmail')
+              }}
+            </p>
+          }
+        </div>
+
+        <div class="field">
+          <label for="register-password">{{ copy.t('password') }}</label>
+          <div class="field__control field__control--plain">
+            <input
+              id="register-password"
+              [type]="showPassword() ? 'text' : 'password'"
+              formControlName="password"
+              autocomplete="new-password"
+              maxlength="100"
+              placeholder="••••••••"
+              [attr.aria-invalid]="
+                form.controls.password.touched &&
+                form.controls.password.invalid
+              "
+            />
+            <button
+              class="icon-button"
+              type="button"
+              (click)="showPassword.set(!showPassword())"
+              [attr.aria-label]="
+                copy.t(showPassword() ? 'hidePassword' : 'showPassword')
+              "
+              [attr.aria-pressed]="showPassword()"
+            >
+              <span class="material-symbols-outlined" aria-hidden="true">
+                {{ showPassword() ? 'visibility_off' : 'visibility' }}
+              </span>
+            </button>
+          </div>
+
+          <section class="password-checklist" aria-live="polite">
+            <h3>{{ copy.t('passwordRequirements') }}</h3>
+            <ul>
+              <li [class.is-met]="passwordMeets('length')">
+                <span class="material-symbols-outlined" aria-hidden="true">
+                  {{ passwordMeets('length') ? 'check_circle' : 'circle' }}
+                </span>
+                {{ copy.t('passwordLength') }}
+              </li>
+              <li [class.is-met]="passwordMeets('uppercase')">
+                <span class="material-symbols-outlined" aria-hidden="true">
+                  {{ passwordMeets('uppercase') ? 'check_circle' : 'circle' }}
+                </span>
+                {{ copy.t('passwordUppercase') }}
+              </li>
+              <li [class.is-met]="passwordMeets('lowercase')">
+                <span class="material-symbols-outlined" aria-hidden="true">
+                  {{ passwordMeets('lowercase') ? 'check_circle' : 'circle' }}
+                </span>
+                {{ copy.t('passwordLowercase') }}
+              </li>
+              <li [class.is-met]="passwordMeets('digit')">
+                <span class="material-symbols-outlined" aria-hidden="true">
+                  {{ passwordMeets('digit') ? 'check_circle' : 'circle' }}
+                </span>
+                {{ copy.t('passwordDigit') }}
+              </li>
+            </ul>
+          </section>
+        </div>
+
+        <div class="field">
+          <label for="register-confirm-password">
+            {{ copy.t('confirmPassword') }}
+          </label>
+          <div class="field__control field__control--plain">
+            <input
+              id="register-confirm-password"
+              [type]="showConfirmation() ? 'text' : 'password'"
+              formControlName="confirmPassword"
+              autocomplete="new-password"
+              maxlength="100"
+              placeholder="••••••••"
+              [attr.aria-invalid]="
+                form.controls.confirmPassword.touched &&
+                (form.controls.confirmPassword.invalid ||
+                  form.hasError('passwordMismatch'))
+              "
+              aria-describedby="register-confirm-error"
+            />
+            <button
+              class="icon-button"
+              type="button"
+              (click)="showConfirmation.set(!showConfirmation())"
+              [attr.aria-label]="
+                copy.t(showConfirmation() ? 'hidePassword' : 'showPassword')
+              "
+              [attr.aria-pressed]="showConfirmation()"
+            >
+              <span class="material-symbols-outlined" aria-hidden="true">
+                {{ showConfirmation() ? 'visibility_off' : 'visibility' }}
+              </span>
+            </button>
+          </div>
+          @if (
+            form.controls.confirmPassword.touched &&
+            form.controls.confirmPassword.hasError('required')
+          ) {
+            <p id="register-confirm-error" class="field-error">
+              {{ copy.t('required') }}
+            </p>
+          } @else if (
+            form.controls.confirmPassword.touched &&
+            form.hasError('passwordMismatch')
+          ) {
+            <p id="register-confirm-error" class="field-error">
+              {{ copy.t('passwordsMismatch') }}
+            </p>
+          }
+        </div>
+
+        <button class="auth-button" type="submit" [disabled]="submitting()">
+          @if (submitting()) {
+            <span class="spinner" aria-hidden="true"></span>
+            {{ copy.t('registering') }}
+          } @else {
+            {{ copy.t('register') }}
+          }
+        </button>
+      </form>
+    }
+  </section>
+
+  @if (!result()) {
+    <p class="auth-switch">
+      {{ copy.t('haveAccount') }}
+      <a class="auth-link" routerLink="/auth/login">
+        {{ copy.t('login') }}
+      </a>
+    </p>
+  }
+</main>

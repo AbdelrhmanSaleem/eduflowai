@@ -1,0 +1,63 @@
+@use '../operations-layout/operations-layout.scss';
+
+.brand {
+  text-decoration: none;
+}
+
+.admin-navigation {
+  border-block-end: 1px solid #e0e6ed;
+  background: #fff;
+}
+
+.admin-navigation nav {
+  display: flex;
+  width: min(100% - 2rem, 72rem);
+  margin-inline: auto;
+  gap: 0.25rem;
+  overflow-x: auto;
+  padding-block: 0.45rem;
+}
+
+.admin-navigation a {
+  display: inline-flex;
+  min-height: 2.55rem;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.38rem;
+  border-radius: 0.55rem;
+  padding-inline: 0.72rem;
+  color: #5e6d82;
+  font-size: 0.75rem;
+  font-weight: 750;
+  text-decoration: none;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.admin-navigation a:hover,
+.admin-navigation a.is-active {
+  background: #eaf3fb;
+  color: #0c4778;
+}
+
+.admin-navigation .material-symbols-outlined {
+  font-size: 1.05rem;
+}
+
+@media (max-width: 40rem) {
+  .admin-navigation nav {
+    width: calc(100% - 1rem);
+  }
+
+  .admin-navigation a {
+    padding-inline: 0.55rem;
+    font-size: 0.7rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-navigation a {
+    transition: none;
+  }
+}

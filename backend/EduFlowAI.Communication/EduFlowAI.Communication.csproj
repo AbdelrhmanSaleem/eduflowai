@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EduFlowAI.Identity\EduFlowAI.Identity.csproj" />
+    <ProjectReference Include="..\EduFlowAI.Shared.Kernel\EduFlowAI.Shared.Kernel.csproj" />
+    <ProjectReference Include="..\EduFlowAI.Shared.Messaging.Contracts\EduFlowAI.Shared.Messaging.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MailKit" Version="4.17.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.10" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.10" />
+    <PackageReference Include="MimeKit" Version="4.17.0" />
+    <PackageReference Include="WolverineFx" Version="6.20.0" />
+    <PackageReference Include="WolverineFx.EntityFrameworkCore" Version="6.20.0" />
+    <PackageReference Include="WolverineFx.Postgresql" Version="6.20.0" />
+    <PackageReference Include="WolverineFx.RabbitMQ" Version="6.20.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Application\DTOs\" />
+    <Folder Include="Application\Validators\" />
+  </ItemGroup>
+
+</Project>

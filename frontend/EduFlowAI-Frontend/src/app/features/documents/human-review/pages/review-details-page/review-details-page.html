@@ -1,0 +1,257 @@
+<section class="review-details" aria-labelledby="review-details-title">
+  <a class="back-link" routerLink="/operations/document-reviews">
+    <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+    {{ copy().details.back }}
+  </a>
+
+  @if (loading()) {
+    <div class="state-card" aria-live="polite">
+      <span class="material-symbols-outlined state-card__icon" aria-hidden="true"
+        >pending_actions</span
+      >
+      <h1>{{ copy().details.loading }}</h1>
+    </div>
+  } @else if (error()) {
+    <div class="state-card state-card--error" role="alert">
+      <span class="material-symbols-outlined state-card__icon" aria-hidden="true">error</span>
+      <h1>{{ copy().details.errorTitle }}</h1>
+      <p>{{ copy().details.errorCopy }}</p>
+      <button class="button button--secondary" type="button" (click)="retry()">
+        {{ copy().common.retry }}
+      </button>
+    </div>
+  } @else if (review(); as item) {
+    <header class="page-header">
+      <div>
+        <span class="eyebrow">{{ documentTypeLabel(item.documentType) }}</span>
+        <h1 id="review-details-title">{{ copy().details.title }}</h1>
+        <p>{{ copy().details.subtitle }}</p>
+      </div>
+      <span class="status-pill" [attr.data-status]="item.status">{{
+        statusLabel(item.status)
+      }}</span>
+    </header>
+
+    <div class="review-workspace">
+      <section class="document-pane">
+        @if (fileLoading()) {
+          <div class="file-state" aria-live="polite">
+            <span class="material-symbols-outlined" aria-hidden="true">draft</span>
+            <h2>{{ copy().details.fileLoading }}</h2>
+          </div>
+        } @else if (fileError()) {
+          <div class="file-state file-state--error" role="alert">
+            <span class="material-symbols-outlined" aria-hidden="true">broken_image</span>
+            <h2>{{ copy().details.fileErrorTitle }}</h2>
+            <p>{{ copy().details.fileErrorCopy }}</p>
+            <button class="button button--secondary" type="button" (click)="retryFile()">
+              {{ copy().details.retryFile }}
+            </button>
+          </div>
+        } @else if (fileUrl()) {
+          <app-secure-file-viewer
+            [sourceUrl]="fileUrl()"
+            [mimeType]="fileMimeType()"
+            [fileName]="item.originalFileName"
+            [labels]="viewerLabels()"
+          />
+        }
+
+        <footer class="document-meta">
+          <span
+            ><strong>{{ copy().details.documentType }}:</strong>
+            {{ documentTypeLabel(item.documentType) }}</span
+          >
+          <span
+            ><strong>{{ copy().details.fileName }}:</strong> {{ item.originalFileName }}</span
+          >
+        </footer>
+      </section>
+
+      <section class="verification-pane">
+        <article class="ai-summary ai">
+          <div class="ai-summary__header">
+            <div>
+              <span class="ai-label">{{ copy().details.aiLabel }}</span>
+              <h2>{{ copy().details.aiStatus }}</h2>
+            </div>
+            <span class="status-pill" [attr.data-status]="item.status">{{
+              statusLabel(item.status)
+            }}</span>
+          </div>
+          <p class="ai-advisory">{{ copy().details.aiAdvisory }}</p>
+
+          @if (verification(); as details) {
+            <div class="ai-metrics">
+              <div>
+                <span>{{ copy().details.model }}</span>
+                <strong>{{ details.modelName || copy().common.unavailable }}</strong>
+              </div>
+              <div>
+                <span>{{ copy().details.confidence }}</span>
+                <strong>{{ confidenceLabel(details.confidenceScore) }}</strong>
+              </div>
+            </div>
+            <div class="confidence-track" [attr.aria-label]="copy().details.confidence">
+              <span [style.width.%]="details.confidenceScore * 100"></span>
+            </div>
+          }
+        </article>
+
+        @if (verification(); as details) {
+          @if (hasMismatch()) {
+            <div class="discrepancy-card" role="status">
+              <span class="material-symbols-outlined" aria-hidden="true">warning</span>
+              <strong>{{ copy().details.discrepancy }}</strong>
+            </div>
+          }
+
+          @if (details.warnings.length || details.missingFields.length) {
+            <div class="verification-lists">
+              @if (details.warnings.length) {
+                <section>
+                  <h3>{{ copy().details.warnings }}</h3>
+                  <ul>
+                    @for (warning of details.warnings; track warning) {
+                      <li>{{ warning }}</li>
+                    }
+                  </ul>
+                </section>
+              }
+              @if (details.missingFields.length) {
+                <section>
+                  <h3>{{ copy().details.missingFields }}</h3>
+                  <ul>
+                    @for (field of details.missingFields; track field) {
+                      <li>{{ fieldLabel(field) }}</li>
+                    }
+                  </ul>
+                </section>
+              }
+            </div>
+          }
+
+          <section class="comparison-card">
+            <h2>{{ copy().details.comparison }}</h2>
+            @if (details.fields.length) {
+              <div class="comparison-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>{{ copy().details.field }}</th>
+                      <th>{{ copy().details.applicantData }}</th>
+                      <th>{{ copy().details.extractedData }}</th>
+                      <th>{{ copy().details.match }}</th>
+                      <th>{{ copy().details.notes }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (field of details.fields; track trackField($index, field)) {
+                      <tr [class.mismatch-row]="!field.isMatch">
+                        <th scope="row">{{ fieldLabel(field.fieldName) }}</th>
+                        <td>{{ fieldValue(field.expectedValue) }}</td>
+                        <td>{{ fieldValue(field.extractedValue) }}</td>
+                        <td>
+                          <span
+                            class="match-indicator"
+                            [class.match-indicator--error]="!field.isMatch"
+                          >
+                            <span class="material-symbols-outlined" aria-hidden="true">{{
+                              field.isMatch ? 'check_circle' : 'cancel'
+                            }}</span>
+                            <span class="sr-only">{{
+                              field.isMatch ? copy().details.matched : copy().details.mismatched
+                            }}</span>
+                          </span>
+                        </td>
+                        <td>{{ field.isMatch ? '—' : fieldNotes(field) }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            } @else {
+              <p class="no-fields">{{ copy().details.noFields }}</p>
+            }
+          </section>
+        } @else {
+          <div class="verification-unavailable" role="status">
+            <span class="material-symbols-outlined" aria-hidden="true">data_alert</span>
+            <div>
+              <h2>{{ copy().details.verificationUnavailable }}</h2>
+              <p>{{ copy().details.verificationUnavailableCopy }}</p>
+            </div>
+          </div>
+        }
+
+        @if (actionError()) {
+          <p class="action-error" role="alert">{{ actionError() }}</p>
+        }
+
+        @if (item.status === 'ReplacementRequested') {
+          <footer class="review-actions review-actions--complete" role="status">
+            <span class="material-symbols-outlined" aria-hidden="true">task_alt</span>
+            <strong>{{ copy().details.replacementSent }}</strong>
+          </footer>
+        } @else {
+          <footer class="review-actions">
+            <button
+              class="button button--approve"
+              type="button"
+              [disabled]="!isActionable() || submitting()"
+              (click)="openDialog('approve')"
+            >
+              <span class="material-symbols-outlined" aria-hidden="true">thumb_up</span
+              >{{ copy().details.approve }}
+            </button>
+            <button
+              class="button button--reject"
+              type="button"
+              [disabled]="!isActionable() || submitting()"
+              (click)="openDialog('reject')"
+            >
+              <span class="material-symbols-outlined" aria-hidden="true">thumb_down</span
+              >{{ copy().details.reject }}
+            </button>
+            <button
+              class="button button--primary"
+              type="button"
+              [disabled]="!isActionable() || submitting()"
+              (click)="openDialog('replacement')"
+            >
+              <span class="material-symbols-outlined" aria-hidden="true"
+                >published_with_changes</span
+              >{{ copy().details.requestReplacement }}
+            </button>
+          </footer>
+        }
+      </section>
+    </div>
+  }
+</section>
+
+@if (activeDialog() === 'approve') {
+  <app-confirmation-dialog
+    [config]="approveConfig()"
+    [submitting]="submitting()"
+    [errorMessage]="actionError()"
+    (cancelled)="closeDialog()"
+    (confirmed)="approve()"
+  />
+} @else if (activeDialog() === 'reject') {
+  <app-reason-dialog
+    [config]="rejectConfig()"
+    [submitting]="submitting()"
+    [errorMessage]="actionError()"
+    (cancelled)="closeDialog()"
+    (confirmed)="reject($event)"
+  />
+} @else if (activeDialog() === 'replacement') {
+  <app-reason-dialog
+    [config]="replacementConfig()"
+    [submitting]="submitting()"
+    [errorMessage]="actionError()"
+    (cancelled)="closeDialog()"
+    (confirmed)="requestReplacement($event)"
+  />
+}

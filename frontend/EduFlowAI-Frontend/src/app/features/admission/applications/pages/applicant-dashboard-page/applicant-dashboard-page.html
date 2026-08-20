@@ -1,0 +1,120 @@
+<!-- Check if data is loading -->
+@if (store.isLoading()) {
+  <div class="flex justify-center items-center min-h-[400px]">
+    <span class="material-symbols-outlined animate-spin text-4xl text-primary">autorenew</span>
+  </div>
+}
+
+<!-- If we have an error -->
+@if (store.error()) {
+<div class="bg-error-container text-on-error-container p-4 rounded-lg text-center mt-8">
+  <p class="font-headline-md">{{ store.error() }}</p>
+  <button (click)="retryLoading()" class="mt-4 px-4 py-2 bg-error text-on-error rounded-DEFAULT">Retry</button>
+</div>
+}
+
+<!-- Main Dashboard Content - Bound to summaryData -->
+@if (store.summaryData(); as summary) {
+<div class="p-margin-page flex-grow flex flex-col gap-8 max-w-container-max mx-auto w-full">
+  
+  <!-- Breadcrumbs -->
+  <nav aria-label="Breadcrumb" class="flex text-on-surface-variant font-label-sm text-label-sm">
+    <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
+      <li class="inline-flex items-center">
+        <a class="inline-flex items-center hover:text-primary transition-colors" href="#">Dashboard</a>
+      </li>
+    </ol>
+  </nav>
+
+  <!-- Main Header Area -->
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-outline-variant pb-6">
+    <div>
+      <h1 class="font-headline-xl text-headline-xl text-primary">Application Dashboard - {{ summary.intakeName }}</h1>
+      <div class="flex items-center gap-4 mt-2 text-on-surface-variant font-body-sm text-body-sm">
+        <span class="flex items-center gap-1">
+          <span class="material-symbols-outlined text-[16px]">calendar_today</span>
+          Submitted: {{ (summary.submittedAt | date:'mediumDate') || 'Not Submitted Yet' }}
+        </span>
+        <span class="w-1 h-1 rounded-full bg-outline"></span>
+        <span class="flex items-center gap-1">
+          <span class="material-symbols-outlined text-[16px]">update</span>
+          Last Updated: {{ summary.lastUpdatedAt | date:'mediumDate' }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Horizontal Stepper (Timeline) -->
+  <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-6 shadow-sm overflow-x-auto">
+    <h3 class="font-headline-md text-headline-md text-primary mb-6">Progress Timeline</h3>
+    <!-- Compose the dumb component and pass the current status from the store -->
+    <app-status-timeline [summary]="summary"></app-status-timeline>
+  </div>
+
+  <!-- FINAL RESULT CARD INTEGRATION -->
+  @if (summary.currentStatus === 'Admitted' || summary.currentStatus === 'Waitlisted' || summary.currentStatus === 'NotSelected') {
+    <!-- Pass the currentApplicationId and the new allocation details to the card component -->
+    <app-final-result-card 
+        [status]="summary.currentStatus"
+        [applicationId]="currentApplicationId"
+        [trackName]="summary.trackName || 'TBD'"
+        [branchName]="summary.branchName || 'TBD'"
+        [waitlistPosition]="summary.waitlistPosition || 0">
+    </app-final-result-card>
+  }
+
+  <!-- Summary Cards Row -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    
+    <!-- Card 1: Eligibility Result -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-5 shadow-sm flex flex-col justify-between">
+      <div class="flex justify-between items-start mb-4">
+        <h4 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Eligibility</h4>
+        <span class="material-symbols-outlined text-emerald-600">verified</span>
+      </div>
+      <div>
+        <p class="font-headline-md text-headline-md text-on-surface mb-2">{{ summary.eligibilityResult }}</p>
+      </div>
+    </div>
+
+    <!-- Card 2: Current Phase -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-5 shadow-sm flex flex-col justify-between relative overflow-hidden">
+      <!-- Background aesthetic element -->
+      <div class="absolute top-0 right-0 w-16 h-16 bg-primary-container/10 rounded-bl-full -z-0"></div>
+      
+      <div class="flex justify-between items-start mb-4 relative z-10">
+        <h4 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">Current Phase</h4>
+        <span class="material-symbols-outlined text-primary">info</span>
+      </div>
+      
+      <!-- Added flex-grow to push the button to the bottom if the card stretches -->
+      <div class="relative z-10 flex-grow">
+        <p class="font-headline-md text-headline-md text-on-surface mb-2">{{ summary.currentStatus }}</p>
+      </div>
+
+      <!-- Dynamic CTA Button Area -->
+      <!-- We assign the result of getActionConfig to a template variable 'cta' -->
+      @if (getActionConfig(summary.currentStatus); as cta) {
+        <div class="relative z-10 mt-4 pt-4 border-t border-outline-variant">
+          <button [routerLink]="cta.path" 
+                  class="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md py-2.5 px-4 rounded-DEFAULT transition-colors duration-200 shadow-sm">
+            <span class="material-symbols-outlined text-[20px]">{{ cta.icon }}</span>
+            {{ cta.label }}
+          </button>
+        </div>
+      }
+    </div>
+
+    <!-- Card 3: Actionable Message -->
+    <div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-5 shadow-sm flex flex-col justify-between bg-gradient-to-br from-surface to-surface-container-lowest">
+      <div class="flex justify-between items-start mb-4">
+        <h4 class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">System Message</h4>
+        <span class="material-symbols-outlined text-outline">message</span>
+      </div>
+      <div>
+        <p class="font-body-sm text-body-sm text-on-surface-variant">{{ summary.statusMessage }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+}

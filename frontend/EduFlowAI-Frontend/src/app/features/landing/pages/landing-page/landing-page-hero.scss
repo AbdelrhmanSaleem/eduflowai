@@ -1,0 +1,119 @@
+.progress-track {
+  overflow: hidden;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+}
+
+.progress-fill {
+  width: 72%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--navy-700), var(--navy-600));
+}
+
+.journey {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.journey-item {
+  display: grid;
+  align-items: center;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  gap: 12px;
+  padding: 13px;
+  border: 1px solid transparent;
+  border-radius: 15px;
+  background: var(--surface-soft);
+}
+
+.journey-item.active {
+  border-color: color-mix(in srgb, var(--navy-600), transparent 72%);
+  background: var(--blue-100);
+}
+
+.journey-item.ai {
+  border-color: color-mix(in srgb, var(--amber-600), transparent 70%);
+  background: var(--amber-100);
+}
+
+.journey-icon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--surface);
+  color: var(--navy-700);
+  place-items: center;
+}
+
+.journey-item.ai .journey-icon {
+  color: var(--amber-700);
+}
+
+.journey-copy strong {
+  font-size: 0.9rem;
+}
+
+.journey-state {
+  color: var(--text-soft);
+  font-size: 0.69rem;
+  font-weight: 700;
+}
+
+.floating-card {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-md);
+  color: var(--heading);
+  font-size: 0.82rem;
+  font-weight: 650;
+  animation: float 5s ease-in-out infinite;
+}
+
+.floating-card.one {
+  top: 85px;
+  inset-inline-end: -30px;
+}
+
+.floating-card.two {
+  bottom: 105px;
+  inset-inline-start: -30px;
+  animation-delay: -2s;
+}
+
+.mini-icon {
+  display: grid;
+  width: 31px;
+  height: 31px;
+  border-radius: 9px;
+  background: var(--blue-100);
+  color: var(--navy-700);
+  place-items: center;
+}
+
+.floating-card.two .mini-icon {
+  background: var(--amber-100);
+  color: var(--amber-700);
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}

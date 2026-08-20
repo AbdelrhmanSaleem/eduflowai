@@ -1,0 +1,15 @@
+@if (errors().length) {
+  <div class="validation-errors" role="alert" aria-live="polite">
+    <span class="material-symbols-outlined" aria-hidden="true">error</span>
+    <div>
+      @if (title()) {
+        <p class="validation-errors__title">{{ title() }}</p>
+      }
+      <ul>
+        @for (error of errors(); track $index) {
+          <li>{{ error }}</li>
+        }
+      </ul>
+    </div>
+  </div>
+}

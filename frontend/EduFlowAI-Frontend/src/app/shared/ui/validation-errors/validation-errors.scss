@@ -1,0 +1,26 @@
+.validation-errors {
+  display: flex;
+  gap: 0.75rem;
+  border: 1px solid #ffb4ab;
+  border-radius: 0.5rem;
+  background: #ffdad6;
+  padding: 0.875rem 1rem;
+  color: #93000a;
+  font-size: 0.875rem;
+  line-height: 1.35rem;
+}
+
+.validation-errors .material-symbols-outlined {
+  flex: none;
+  font-size: 1.25rem;
+}
+
+.validation-errors__title {
+  margin: 0 0 0.25rem;
+  font-weight: 600;
+}
+
+.validation-errors ul {
+  margin: 0;
+  padding-inline-start: 1.1rem;
+}

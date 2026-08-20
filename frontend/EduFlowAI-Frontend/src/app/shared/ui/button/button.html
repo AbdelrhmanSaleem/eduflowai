@@ -1,0 +1,18 @@
+<button
+  class="button"
+  [class.button--primary]="variant() === 'primary'"
+  [class.button--secondary]="variant() === 'secondary'"
+  [class.button--danger]="variant() === 'danger'"
+  [class.button--ghost]="variant() === 'ghost'"
+  [class.button--full]="fullWidth()"
+  [type]="type()"
+  [disabled]="isDisabled()"
+  [attr.aria-label]="accessibleLabel()"
+  [attr.aria-busy]="loading()"
+  (click)="handleClick($event)"
+>
+  @if (loading()) {
+    <span class="button__spinner" aria-hidden="true"></span>
+  }
+  <span><ng-content /></span>
+</button>

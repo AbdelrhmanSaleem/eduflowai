@@ -1,0 +1,151 @@
+<!-- The modal container overlay taking full screen with a dimmed charcoal backdrop -->
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-inverse-surface/85 p-4 overflow-y-auto" dir="ltr">
+    
+    <!-- Modal Box -->
+    <div class="w-full max-w-[600px] bg-surface-container-lowest rounded-lg border border-surface-variant shadow-[0_4px_6px_-1px_rgba(0,0,0,0.04),0_2px_4px_-1px_rgba(0,0,0,0.02)] flex flex-col overflow-hidden relative">
+        
+        <!-- Loading State overlay for initial data fetch from ApplicationsStore -->
+        @if (applicationsStore.isLoading() || applicationsStore.isStatusDetailsLoading()) {
+            <div class="absolute inset-0 z-10 bg-surface/80 backdrop-blur-sm flex items-center justify-center">
+                <div class="flex flex-col items-center gap-2">
+                    <span class="material-symbols-outlined animate-spin text-4xl text-primary">sync</span>
+                    <span class="font-label-md text-on-surface-variant">Loading applicant data...</span>
+                </div>
+            </div>
+        }
+
+        <!-- Header: Binds to ApplicationDetailsDto -->
+        <div class="p-gutter border-b border-surface-variant bg-surface-container-lowest">
+            <h1 class="font-headline-lg text-headline-lg text-primary mb-3">Manual Eligibility Override</h1>
+            
+            @if (applicationsStore.applicationDetails(); as details) {
+                <div class="flex flex-wrap gap-x-6 gap-y-2">
+                    <div class="flex flex-col">
+                        <span class="font-label-sm text-label-sm text-outline mb-1">Application ID</span>
+                        <!-- Removed font-mono to fix CSS conflict -->
+                        <span class="font-body-sm text-body-sm text-on-surface uppercase">{{ details.id | slice:0:8 }}</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="font-label-sm text-label-sm text-outline mb-1">Applicant User ID</span>
+                        <!-- Bound correctly to applicantUserId as defined in the DTO -->
+                        <span class="font-body-sm text-body-sm text-on-surface uppercase">{{ details.applicantUserId | slice:0:8 }}</span>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="font-label-sm text-label-sm text-outline mb-1">Track ID</span>
+                        <!-- Fixed the truthy evaluation error by using a ternary operator -->
+                        <span class="font-body-sm text-body-sm text-on-surface uppercase">
+                            {{ details.preferences[0]?.trackId ? (details.preferences[0].trackId | slice:0:8) : 'Not Selected' }}
+                        </span>
+                    </div>
+                </div>
+            }
+        </div>
+        
+        <!-- Content -->
+        <div class="p-gutter flex flex-col gap-gutter bg-surface">
+            
+            <!-- Result Banners from AssessmentStore -->
+            @if (assessmentStore.overrideSuccessMessage()) {
+                <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 p-3 rounded-lg flex gap-2">
+                    <span class="material-symbols-outlined">check_circle</span>
+                    <p class="font-body-sm">{{ assessmentStore.overrideSuccessMessage() }}</p>
+                </div>
+            }
+            @if (assessmentStore.overrideError()) {
+                <div class="bg-error-container border border-error text-on-error-container p-3 rounded-lg flex gap-2">
+                    <span class="material-symbols-outlined">error</span>
+                    <p class="font-body-sm">{{ assessmentStore.overrideError() }}</p>
+                </div>
+            }
+
+            <!-- Section 1: Read-only Reference (Binds to EligibilityDetailsDto) -->
+            <div class="border border-surface-variant rounded-lg bg-surface-container p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="font-headline-md text-headline-md text-on-surface">System Assessment</h2>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-label-sm text-label-sm border border-error text-error bg-transparent">
+                        <span class="material-symbols-outlined text-[14px] mr-1">cancel</span>
+                        Eligibility Failed
+                    </span>
+                </div>
+                
+                <ul class="list-disc pl-5 font-body-sm text-body-sm text-on-surface-variant space-y-1">
+                    @if (applicationsStore.eligibilityDetails(); as elig) {
+                        @for (reason of elig.failureReasons; track $index) {
+                            <li>{{ reason }}</li>
+                        }
+                        @if (elig.failureReasons.length === 0) {
+                            <li>No specific failure reasons provided by the system.</li>
+                        }
+                    }
+                </ul>
+            </div>
+
+            <!-- Section 2: Override Form -->
+            <div class="flex flex-col gap-4">
+                <!-- Amber/Warning Banner -->
+                <div class="bg-[#FEF3C7] border border-[#F59E0B] rounded-lg p-3 flex items-start gap-3">
+                    <span class="material-symbols-outlined text-[#92400E] mt-0.5">warning</span>
+                    <p class="font-body-sm text-body-sm text-[#92400E]">
+                        <strong class="font-semibold">Notice:</strong> This action will bypass automated admission rules and will be permanently recorded in the system Audit Log.
+                    </p>
+                </div>
+                
+                <!-- Textarea -->
+                <div class="flex flex-col gap-1.5">
+                    <label class="font-label-md text-label-md text-on-surface" for="justification">
+                        Override Justification <span class="text-error">*</span>
+                    </label>
+                    
+                    <!-- Binding with ngModel and disabling if already successful or currently processing -->
+                    <textarea 
+                        id="justification" 
+                        name="justification"
+                        [ngModel]="justification()"
+                        (ngModelChange)="justification.set($event)"
+                        [disabled]="assessmentStore.isOverriding() || assessmentStore.overrideSuccessMessage() !== null"
+                        class="block w-full rounded-md border-outline-variant shadow-sm focus:border-primary-container focus:ring-primary-container sm:text-sm font-body-md text-body-md bg-surface-container-lowest disabled:bg-surface-container disabled:text-outline transition-colors" 
+                        placeholder="Explain why this exception is being granted..." 
+                        required 
+                        rows="4">
+                    </textarea>
+                    
+                    <div class="flex justify-between items-center mt-1">
+                        <!-- Dynamic color binding based on character count -->
+                        <span class="font-label-sm text-label-sm transition-colors" [ngClass]="justification().length < 50 ? 'text-error' : 'text-outline'">
+                            Minimum 50 characters required.
+                        </span>
+                        <span class="font-label-sm text-label-sm text-outline">{{ justification().length }}/50</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="p-4 border-t border-surface-variant bg-surface-container-lowest flex justify-end gap-stack-gap">
+            <button 
+                type="button" 
+                (click)="closeModal()"
+                class="px-4 py-2 font-label-md text-label-md text-secondary hover:bg-surface-container-high rounded transition-colors duration-150 border border-transparent">
+                {{ assessmentStore.overrideSuccessMessage() ? 'Close' : 'Cancel' }}
+            </button>
+            
+            <!-- Hide Authorize button if success message is present -->
+            @if (!assessmentStore.overrideSuccessMessage()) {
+                <button 
+                    type="button" 
+                    (click)="submitOverride()"
+                    [disabled]="justification().length < 50 || assessmentStore.isOverriding()"
+                    class="px-4 py-2 font-label-md text-label-md bg-primary text-on-primary rounded hover:bg-primary/90 transition-colors duration-150 shadow-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                    
+                    @if (assessmentStore.isOverriding()) {
+                        <span class="material-symbols-outlined text-[18px] animate-spin">sync</span>
+                        Processing...
+                    } @else {
+                        <span class="material-symbols-outlined text-[18px]">verified_user</span>
+                        Authorize Override
+                    }
+                </button>
+            }
+        </div>
+    </div>
+</div>
